@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Fisheries System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Welcome Card -->
+            <div class="card text-center mb-4">
+                <div class="card-header card-header-custom py-4">
+                    <h1 class="mb-2">
+                        <i class="fas fa-fish fa-2x mb-3"></i>
+                    </h1>
+                    <h2 class="fw-bold mb-1">Selamat Datang!</h2>
+                    <p class="mb-0 opacity-90">Fisheries System</p>
+                </div>
+                <div class="card-body p-5">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="text-center">
+                                <i class="fas fa-user-check fa-3x text-success mb-3"></i>
+                                <h5 class="fw-bold">Login Berhasil</h5>
+                                <p class="text-muted">Anda telah berhasil masuk ke sistem PDSPKP</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="text-center">
+                                <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                                <h5 class="fw-bold">Sistem Aman</h5>
+                                <p class="text-muted">Data dan informasi Anda terlindungi dengan baik</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-light rounded-3">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-user me-2"></i>Informasi Login
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Username:</strong> {{ session.username }}</p>
+                                <p class="mb-1"><strong>Role:</strong> 
+                                    <span class="badge 
+                                        {% if session.role == 'budidaya' %}bg-success
+                                        {% elif session.role == 'tangkap' %}bg-info
+                                        {% elif session.role == 'pdspkp' %}bg-primary
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ session.role|title }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    Fisheries Management System adalah platform terintegrasi untuk 
+                                    mengelola data perikanan budidaya, tangkap, dan sertifikasi produk.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Categories Display -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-seedling fa-2x text-success mb-2"></i>
+                                    <h6 class="fw-bold">Sektor Budidaya</h6>
+                                    <small class="text-muted">Ikan Air Tawar, Ikan Laut, Udang, Rumput Laut, Kerang</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-fish fa-2x text-info mb-2"></i>
+                                    <h6 class="fw-bold">Sektor Tangkap</h6>
+                                    <small class="text-muted">Ikan Laut, Ikan Air Tawar, Udang, Cumi-cumi, Kepiting</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-custom me-2">
+                            <i class="fas fa-tachometer-alt me-2"></i>Buka Dashboard
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Info -->
+            <div class="text-center">
+                <small class="text-muted">
+                    <i class="fas fa-code me-1"></i>
+                    Fisheries Management System v1.0
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

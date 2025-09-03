@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - PDSPKP System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-tachometer-alt"></i> Dashboard PDSPKP</h2>
+            <a href="{{ url_for('add_pdspkp') }}" class="btn btn-custom">
+                <i class="fas fa-plus"></i> Tambah Data Baru
+            </a>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card stats-card bg-primary text-white h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-database me-3 fa-2x opacity-75"></i>
+                                <div>
+                                    <h6 class="mb-0 fw-semibold opacity-90">Total Data</h6>
+                                    <h2 class="mb-0 fw-bold">{{ data|length }}</h2>
+                                </div>
+                            </div>
+                            <small class="opacity-75">
+                                <i class="fas fa-chart-line me-1"></i>Data terdaftar
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card stats-card bg-success text-white h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-seedling me-3 fa-2x opacity-75"></i>
+                                <div>
+                                    <h6 class="mb-0 fw-semibold opacity-90">Budidaya</h6>
+                                    <h2 class="mb-0 fw-bold">{{ data|selectattr("jenis_produk", "search", "budidaya|Budidaya")|list|length }}</h2>
+                                </div>
+                            </div>
+                            <small class="opacity-75">
+                                <i class="fas fa-leaf me-1"></i>Sektor budidaya
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card stats-card bg-info text-white h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-fish me-3 fa-2x opacity-75"></i>
+                                <div>
+                                    <h6 class="mb-0 fw-semibold opacity-90">Tangkap</h6>
+                                    <h2 class="mb-0 fw-bold">{{ data|selectattr("jenis_produk", "search", "tangkap|Tangkap")|list|length }}</h2>
+                                </div>
+                            </div>
+                            <small class="opacity-75">
+                                <i class="fas fa-anchor me-1"></i>Sektor tangkap
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header card-header-custom">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Data PDSPKP</h5>
+            </div>
+            <div class="card-body">
+                {% if data %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Perusahaan</th>
+                                <th>Alamat</th>
+                                <th>Jenis Produk</th>
+                                <th>Contact Person</th>
+                                <th>Email</th>
+                                <th>No. Permohonan</th>
+                                <th>Tgl. Permohonan</th>
+                                <th>No. Rekomtek</th>
+                                <th>Tgl. Rekomtek</th>
+                                <th>No. GMP</th>
+                                <th>Peringkat GMP</th>
+                                <th>Waktu Dibuat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr>
+                                <td><span class="badge bg-dark">{{ row.id }}</span></td>
+                                <td><strong>{{ row.nama_perusahaan }}</strong></td>
+                                <td>{{ row.alamat[:50] }}{% if row.alamat|length > 50 %}...{% endif %}</td>
+                                <td>
+                                    <span class="badge {% if 'budidaya' in row.jenis_produk.lower() %}bg-success{% elif 'tangkap' in row.jenis_produk.lower() %}bg-info{% else %}bg-secondary{% endif %}">
+                                        {{ row.jenis_produk[:30] }}{% if row.jenis_produk|length > 30 %}...{% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ row.contact_person }}</td>
+                                <td><a href="mailto:{{ row.email }}" class="text-decoration-none">{{ row.email }}</a></td>
+                                <td><code>{{ row.nomor_permohonan }}</code></td>
+                                <td>{{ row.tanggal_permohonan }}</td>
+                                <td><code>{{ row.nomor_rekomtek }}</code></td>
+                                <td>{{ row.tanggal_rekomtek }}</td>
+                                <td>{% if row.nomor_gmp != '-' %}<code>{{ row.nomor_gmp }}</code>{% else %}<span class="text-muted">-</span>{% endif %}</td>
+                                <td>{% if row.peringkat_gmp != '-' %}<span class="badge bg-warning">{{ row.peringkat_gmp }}</span>{% else %}<span class="text-muted">-</span>{% endif %}</td>
+                                <td><small>{{ row.waktu_pembuatan.strftime('%d/%m/%Y %H:%M') }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Belum ada data</h5>
+                    <p class="text-muted">Mulai dengan menambahkan data PDSPKP pertama</p>
+                    <a href="{{ url_for('add_pdspkp') }}" class="btn btn-custom">
+                        <i class="fas fa-plus"></i> Tambah Data Sekarang
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
