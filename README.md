@@ -150,3 +150,4 @@ fisheries-system/
 
 **🐟 Fisheries Management System - Powering Indonesian Fisheries** 🇮🇩"
 #tambahin auto face recog dan face enroll mengalami debugging server load #karena overload penyimpanan server dari cloud nya.if else nya kurang untuk #bida dengan menjadikan huer as a admin gabisa tapi in case kadang bisa masuk #dashboard an kadang gabisa masuk karena 1 orang 1 log lama kali ya? #bagaimana pun juga harus ada yang namanya face auth dan face db buat nyimpen #data base itunya okee
+#penambahan fitur in bisa di github untuk for all userdiwaktu yang bersamaan agar railway ga bentrok juga dana apa bedanya dengan redis gwbelom nerapin sama sekali logika loginnya masih beleom jalan jadi bisa di input melalui input tambahan seperti face auth login yang di tarik ke database 

@@ -459,6 +459,95 @@ def add_monitoring_mutu():
     
     return render_template('add_monitoring_mutu.html')
 
+# ==================== KAPAL ROUTES ====================
+
+@app.route('/kapal/register', methods=['GET', 'POST'])
+@require_role('any')
+def register_kapal():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        try:
+            role = session.get('role')
+            prefix = 'BD' if role == 'budidaya' else 'KL' if role == 'tangkap' else 'SR'
+            count = Kapal.query.filter(Kapal.nomor_registrasi.like(f'{prefix}-%')).count() + 1
+            nomor_registrasi = f'{prefix}-{count:03d}-{datetime.now().year}'
+            
+            ikan_target = request.form.getlist('ikan_target')
+            if not ikan_target:
+                ikan_target = request.form.get('ikan_target_manual', '').split(',')
+                ikan_target = [ikan.strip() for ikan in ikan_target if ikan.strip()]
+            
+            kapal = Kapal(
+                nama_kapal=request.form['nama_kapal'],
+                nomor_registrasi=nomor_registrasi,
+                jenis_kapal=role,
+                ukuran_gt=float(request.form['ukuran_gt']) if request.form['ukuran_gt'] else None,
+                ukuran_panjang=float(request.form['ukuran_panjang']) if request.form['ukuran_panjang'] else None,
+                ukuran_lebar=float(request.form['ukuran_lebar']) if request.form['ukuran_lebar'] else None,
+                ukuran_tinggi=float(request.form['ukuran_tinggi']) if request.form['ukuran_tinggi'] else None,
+                nama_pemilik=request.form['nama_pemilik'],
+                nik_pemilik=request.form['nik_pemilik'],
+                alamat_pemilik=request.form['alamat_pemilik'],
+                telepon_pemilik=request.form['telepon_pemilik'],
+                pelabuhan_pangkalan=request.form['pelabuhan_pangkalan'],
+                daerah_operasi=request.form['daerah_operasi'],
+                alat_tangkap=request.form['alat_tangkap'],
+                merk_mesin=request.form['merk_mesin'],
+                kekuatan_mesin=float(request.form['kekuatan_mesin']) if request.form['kekuatan_mesin'] else None,
+                jumlah_mesin=int(request.form['jumlah_mesin']) if request.form['jumlah_mesin'] else 1,
+                registered_by=session['username'],
+                masa_berlaku=datetime.now() + timedelta(days=365)
+            )
+            
+            kapal.set_ikan_target(ikan_target)
+            db.session.add(kapal)
+            db.session.commit()
+            
+            flash(f'Kapal {kapal.nama_kapal} berhasil didaftarkan dengan nomor registrasi {nomor_registrasi}!')
+            return redirect(url_for('dashboard'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error saat mendaftarkan kapal: {str(e)}')
+    
+    return render_template('register_kapal.html', role=session.get('role'))
+
+@app.route('/kapal/list')
+@require_role('any')
+def list_kapal():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    role = session.get('role')
+    
+    if role in ['pdspkp', 'admin']:
+        kapal_list = Kapal.query.all()
+    else:
+        kapal_list = Kapal.query.filter_by(registered_by=session['username']).all()
+    
+    return render_template('list_kapal.html', kapal_list=kapal_list, role=role)
+
+@app.route('/kapal/detail/<int:kapal_id>')
+@require_role('any')
+def detail_kapal(kapal_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    kapal = Kapal.query.get_or_404(kapal_id)
+    
+    role = session.get('role')
+    if role not in ['pdspkp', 'admin'] and kapal.registered_by != session['username']:
+        flash('Anda tidak memiliki akses untuk melihat kapal ini!')
+        return redirect(url_for('list_kapal'))
+    
+    logistik = LogistikKapal.query.filter_by(kapal_id=kapal_id).order_by(
+        LogistikKapal.tanggal_operasi.desc()
+    ).limit(10).all()
+    
+    return render_template('detail_kapal.html', kapal=kapal, logistik=logistik)
+
 # API Routes
 @app.route('/api/budidaya/analytics')
 @require_role('budidaya')
@@ -475,6 +564,31 @@ def api_pdspkp_analytics():
         return jsonify({'error': 'Not authenticated'}), 401
     analytics = get_pdspkp_analytics()
     return jsonify({'success': True, 'pdspkp': analytics})
+
+@app.route('/api/kapal/analytics')
+@require_role('any')
+def api_kapal_analytics():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    analytics = get_kapal_analytics()
+    return jsonify({'success': True, 'analytics': analytics})
+
+@app.route('/api/kapal/<int:kapal_id>', methods=['GET'])
+@require_role('any')
+def api_kapal_detail(kapal_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    kapal = Kapal.query.get_or_404(kapal_id)
+    
+    role = session.get('role')
+    if role not in ['pdspkp', 'admin'] and kapal.registered_by != session['username']:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    return jsonify({
+        'success': True,
+        'kapal': kapal.to_dict()
+    })
 
 @app.route('/logout')
 def logout():
