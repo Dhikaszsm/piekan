@@ -272,7 +272,171 @@ def api_recognize_face():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Recognition error: {str(e)}'})
 
-# Additional essential routes
+# ==================== BUDIDAYA ROUTES ====================
+
+@app.route('/budidaya/permintaan/add', methods=['GET', 'POST'])
+@require_role('budidaya')
+def add_permintaan_benih():
+    if request.method == 'POST':
+        try:
+            count = PermintaanBenih.query.filter_by(created_by=session['username']).count() + 1
+            nomor_permintaan = f'BN-{count:03d}-{datetime.now().year}'
+            
+            jumlah = int(request.form['jumlah_diminta']) if request.form['jumlah_diminta'] else 0
+            harga = float(request.form['harga_per_ekor']) if request.form['harga_per_ekor'] else 0
+            total_biaya = jumlah * harga
+            
+            permintaan = PermintaanBenih(
+                nomor_permintaan=nomor_permintaan,
+                tanggal_permintaan=datetime.strptime(request.form['tanggal_permintaan'], '%Y-%m-%d').date(),
+                nama_pemohon=request.form['nama_pemohon'],
+                alamat_pemohon=request.form['alamat_pemohon'],
+                wilayah_dki=request.form['wilayah_dki'],
+                telepon_pemohon=request.form['telepon_pemohon'],
+                email_pemohon=request.form['email_pemohon'],
+                jenis_usaha=request.form['jenis_usaha'],
+                jenis_ikan=request.form['jenis_ikan'],
+                ukuran_benih=request.form['ukuran_benih'],
+                jumlah_diminta=jumlah,
+                tujuan_budidaya=request.form['tujuan_budidaya'],
+                alamat_kolam=request.form['alamat_kolam'],
+                luas_kolam=float(request.form['luas_kolam']) if request.form['luas_kolam'] else None,
+                jenis_kolam=request.form['jenis_kolam'],
+                sumber_air=request.form['sumber_air'],
+                harga_per_ekor=harga,
+                total_biaya=total_biaya,
+                catatan_pemohon=request.form['catatan_pemohon'],
+                created_by=session['username']
+            )
+            
+            db.session.add(permintaan)
+            db.session.commit()
+            
+            flash(f'Permintaan benih {permintaan.nomor_permintaan} berhasil diajukan!')
+            return redirect(url_for('dashboard_budidaya'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error mengajukan permintaan: {str(e)}')
+    
+    return render_template('add_permintaan_benih.html')
+
+# ==================== PDSPKP ROUTES ====================
+
+@app.route('/pdspkp/permohonan/add', methods=['GET', 'POST'])
+@require_role('pdspkp')
+def add_permohonan_sertifikasi():
+    if request.method == 'POST':
+        try:
+            jenis = request.form['jenis_sertifikat']
+            count = PermohonanSertifikasiProduk.query.filter_by(jenis_sertifikat=jenis).count() + 1
+            nomor_permohonan = f'{jenis}-{count:03d}-{datetime.now().year}'
+            
+            biaya_sertifikasi = float(request.form['biaya_sertifikasi']) if request.form['biaya_sertifikasi'] else 0
+            biaya_audit = float(request.form['biaya_audit']) if request.form['biaya_audit'] else 0
+            total_biaya = biaya_sertifikasi + biaya_audit
+            
+            permohonan = PermohonanSertifikasiProduk(
+                nomor_permohonan=nomor_permohonan,
+                tanggal_permohonan=datetime.strptime(request.form['tanggal_permohonan'], '%Y-%m-%d').date(),
+                nomor_surat=request.form['nomor_surat'],
+                nama_pt=request.form['nama_pt'],
+                alamat_pt=request.form['alamat_pt'],
+                wilayah_dki=request.form['wilayah_dki'],
+                contact_person=request.form['contact_person'],
+                email=request.form['email'],
+                telepon=request.form['telepon'],
+                jenis_produk=request.form['jenis_produk'],
+                nama_produk=request.form['nama_produk'],
+                spesifikasi_produk=request.form['spesifikasi_produk'],
+                jenis_sertifikat=jenis,
+                tujuan_export=request.form['tujuan_export'],
+                nomor_surat_tugas=request.form['nomor_surat_tugas'],
+                tanggal_surat_tugas=datetime.strptime(request.form['tanggal_surat_tugas'], '%Y-%m-%d').date() if request.form['tanggal_surat_tugas'] else None,
+                nomor_rekomtek=request.form['nomor_rekomtek'],
+                tanggal_rekomtek=datetime.strptime(request.form['tanggal_rekomtek'], '%Y-%m-%d').date() if request.form['tanggal_rekomtek'] else None,
+                tanggal_kunjungan=datetime.strptime(request.form['tanggal_kunjungan'], '%Y-%m-%d').date() if request.form['tanggal_kunjungan'] else None,
+                periode_tahun_sertifikasi=int(request.form['periode_tahun_sertifikasi']) if request.form['periode_tahun_sertifikasi'] else datetime.now().year,
+                biaya_sertifikasi=biaya_sertifikasi,
+                biaya_audit=biaya_audit,
+                total_biaya=total_biaya,
+                created_by=session['username']
+            )
+            
+            anggota_kunjungan = request.form.get('anggota_kunjungan', '').split(',')
+            anggota_kunjungan = [a.strip() for a in anggota_kunjungan if a.strip()]
+            permohonan.set_anggota_kunjungan(anggota_kunjungan)
+            
+            db.session.add(permohonan)
+            db.session.commit()
+            
+            flash(f'Permohonan sertifikasi {permohonan.nomor_permohonan} berhasil dibuat!')
+            return redirect(url_for('dashboard_pdspkp'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error membuat permohonan: {str(e)}')
+    
+    return render_template('add_permohonan_sertifikasi.html')
+
+@app.route('/pdspkp/monitoring/add', methods=['GET', 'POST'])
+@require_role('pdspkp')
+def add_monitoring_mutu():
+    if request.method == 'POST':
+        try:
+            count = LaporanMonitoringMutu.query.count() + 1
+            nomor_laporan = f'MON-{count:03d}-{datetime.now().year}'
+            
+            monitoring = LaporanMonitoringMutu(
+                nomor_laporan=nomor_laporan,
+                tanggal_monitoring=datetime.strptime(request.form['tanggal_monitoring'], '%Y-%m-%d').date(),
+                periode_bulan=int(request.form['periode_bulan']),
+                periode_tahun=int(request.form['periode_tahun']),
+                nama_lokasi=request.form['nama_lokasi'],
+                alamat_lokasi=request.form['alamat_lokasi'],
+                wilayah_dki=request.form['wilayah_dki'],
+                jenis_lokasi=request.form['jenis_lokasi'],
+                kategori_pengolah=request.form['kategori_pengolah'],
+                jumlah_outlet=int(request.form['jumlah_outlet']) if request.form['jumlah_outlet'] else 0,
+                jumlah_sampel=int(request.form['jumlah_sampel']) if request.form['jumlah_sampel'] else 0,
+                produk_aman=int(request.form['produk_aman']) if request.form['produk_aman'] else 0,
+                produk_tidak_aman=int(request.form['produk_tidak_aman']) if request.form['produk_tidak_aman'] else 0,
+                tingkat_kepatuhan=float(request.form['tingkat_kepatuhan']) if request.form['tingkat_kepatuhan'] else 0,
+                skor_higienitas=float(request.form['skor_higienitas']) if request.form['skor_higienitas'] else 0,
+                skor_pelabelan=float(request.form['skor_pelabelan']) if request.form['skor_pelabelan'] else 0,
+                petugas_monitoring=session['full_name'],
+                created_by=session['username']
+            )
+            
+            db.session.add(monitoring)
+            db.session.commit()
+            
+            flash(f'Laporan monitoring {monitoring.nomor_laporan} berhasil dibuat!')
+            return redirect(url_for('dashboard_pdspkp'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error membuat laporan monitoring: {str(e)}')
+    
+    return render_template('add_monitoring_mutu.html')
+
+# API Routes
+@app.route('/api/budidaya/analytics')
+@require_role('budidaya')
+def api_budidaya_analytics():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    analytics = get_budidaya_analytics(session['username'])
+    return jsonify({'success': True, 'budidaya': analytics})
+
+@app.route('/api/pdspkp/analytics')
+@require_role('pdspkp')
+def api_pdspkp_analytics():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    analytics = get_pdspkp_analytics()
+    return jsonify({'success': True, 'pdspkp': analytics})
+
 @app.route('/logout')
 def logout():
     session.clear()

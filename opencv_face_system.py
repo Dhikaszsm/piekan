@@ -1,11 +1,27 @@
 # OpenCV Face Recognition System
-import cv2
-import numpy as np
+try:
+    import cv2
+    import numpy as np
+    OPENCV_AVAILABLE = True
+    print("[OK] OpenCV loaded successfully")
+except ImportError as e:
+    print(f"[WARNING] OpenCV not available: {e}")
+    print("[INFO] Face recognition will be disabled")
+    OPENCV_AVAILABLE = False
+    # Mock numpy for fallback
+    class MockNumpy:
+        @staticmethod
+        def frombuffer(*args, **kwargs):
+            return None
+        @staticmethod
+        def max(*args, **kwargs):
+            return 0.5
+    np = MockNumpy()
+
 import os
 import base64
 import json
 from datetime import datetime
-import pickle
 
 class OpenCVFaceSystem:
     """
@@ -20,16 +36,22 @@ class OpenCVFaceSystem:
         self.faces_dir = faces_dir
         self.model_file = os.path.join(faces_dir, 'face_model.yml')
         self.users_file = os.path.join(faces_dir, 'users.json')
+        self.opencv_available = OPENCV_AVAILABLE
         
         # Create directory jika tidak ada
         if not os.path.exists(faces_dir):
             os.makedirs(faces_dir)
         
-        # Initialize face detector
-        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        
-        # Use template matching for simple face recognition (demo purpose)
-        self.use_simple_matching = True
+        if OPENCV_AVAILABLE:
+            # Initialize face detector
+            self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+            # Use template matching for simple face recognition (demo purpose)
+            self.use_simple_matching = True
+        else:
+            # Fallback mode - no face detection
+            self.face_cascade = None
+            self.use_simple_matching = False
+            print("[INFO] Running in fallback mode without face detection")
         
         # Load model jika sudah ada
         self.users_data = self.load_users_data()
@@ -57,6 +79,9 @@ class OpenCVFaceSystem:
     def base64_to_image(self, base64_string):
         """Convert base64 string to OpenCV image dengan preprocessing"""
         try:
+            if not self.opencv_available:
+                return None
+                
             # Remove data URL prefix jika ada
             if 'data:image' in base64_string and 'base64,' in base64_string:
                 base64_string = base64_string.split('base64,')[1]
@@ -104,6 +129,9 @@ class OpenCVFaceSystem:
         Returns: list of face rectangles
         """
         try:
+            if not self.opencv_available or image is None:
+                return []
+                
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             
             # Try multiple detection parameters untuk increased success rate
@@ -159,6 +187,13 @@ class OpenCVFaceSystem:
         Enroll face untuk user tertentu
         """
         try:
+            # Check if OpenCV available
+            if not self.opencv_available:
+                return {
+                    'success': False,
+                    'message': 'Face recognition not available on this server. Please use password login.'
+                }
+            
             # Convert base64 to image
             image = self.base64_to_image(base64_image)
             if image is None:
@@ -243,6 +278,13 @@ class OpenCVFaceSystem:
         Simple face recognition using template matching (demo version)
         """
         try:
+            # Check if OpenCV available
+            if not self.opencv_available:
+                return {
+                    'success': False,
+                    'message': 'Face recognition not available on this server. Please use password login.'
+                }
+            
             # Check if any faces enrolled
             if len(self.users_data) == 0:
                 return {
