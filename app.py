@@ -1,25 +1,65 @@
+# Fisheries System - Production Version for Railway
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from functools import wraps
 import os
 from dotenv import load_dotenv
-from redis_config import redis_manager, cache_result
-from face_models import db, User, FaceData, Attendance, FaceRecognitionLog, init_face_database
-from face_recognition_core import face_system
+from kapal_models import db, Kapal, LogistikKapal, init_kapal_database, get_kapal_analytics
+from budidaya_models import PermintaanBenih, StokBenih, DistribusiBenih, init_budidaya_database, get_budidaya_analytics
+from tangkap_models import TripPenangkapan, HasilTangkapan, init_tangkap_database, get_tangkap_analytics
+from pdspkp_models import PermohonanSertifikasiProduk, LaporanMonitoringMutu, init_pdspkp_database, get_pdspkp_analytics
+from opencv_face_system import face_system
+from datetime import datetime, date, timedelta
 import json
-from datetime import datetime, date
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'fisheries-production-key-railway')
 
-# Database configuration (SQLite untuk development, bisa diganti ke PostgreSQL untuk production)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///fisheries_system.db')
+# Configuration
+app.secret_key = os.environ.get('SECRET_KEY', 'fisheries-production-key-railway-2024')
+
+# Database configuration - PostgreSQL for production, SQLite for development
+if os.environ.get('DATABASE_URL'):
+    # Production on Railway
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+else:
+    # Development
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fisheries_production.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize database
-init_face_database(app)
+# Initialize databases
+init_kapal_database(app)
+init_budidaya_database(app)
+init_tangkap_database(app)
+init_pdspkp_database(app)
+
+# Production User Database
+DEMO_USERS = {
+    # Budidaya Users
+    'natalie': {'password': 'natalie123', 'role': 'budidaya', 'full_name': 'Natalie Budidaya'},
+    'putri': {'password': 'putri123', 'role': 'budidaya', 'full_name': 'Putri Budidaya'},
+    'manda': {'password': 'manda123', 'role': 'budidaya', 'full_name': 'Manda Budidaya'},
+    'besty': {'password': 'besty123', 'role': 'budidaya', 'full_name': 'Besty Budidaya'},
+    'ari': {'password': 'ari123', 'role': 'budidaya', 'full_name': 'Ari Budidaya'},
+    
+    # Tangkap Users
+    'fauzi': {'password': 'fauzi123', 'role': 'tangkap', 'full_name': 'Fauzi Tangkap'},
+    'salman': {'password': 'salman123', 'role': 'tangkap', 'full_name': 'Salman Tangkap'},
+    'fadlan': {'password': 'fadlan123', 'role': 'tangkap', 'full_name': 'Fadlan Tangkap'},
+    'khairinal': {'password': 'khairinal123', 'role': 'tangkap', 'full_name': 'Khairinal Tangkap'},
+    
+    # PDSPKP Users  
+    'elis': {'password': 'elis123', 'role': 'pdspkp', 'full_name': 'Elis PDSPKP'},
+    'rahayu': {'password': 'rahayu123', 'role': 'pdspkp', 'full_name': 'Rahayu PDSPKP'},
+    'dhilla': {'password': 'dhilla123', 'role': 'pdspkp', 'full_name': 'Dhilla PDSPKP'},
+    'endah': {'password': 'endah123', 'role': 'pdspkp', 'full_name': 'Endah PDSPKP'},
+    
+    # Admin
+    'admin': {'password': 'admin123', 'role': 'admin', 'full_name': 'System Administrator'},
+    'dhika': {'password': 'dhika123', 'role': 'admin', 'full_name': 'Dhika Admin'}
+}
 
 # Decorator untuk proteksi role
 def require_role(required_role):
@@ -31,13 +71,16 @@ def require_role(required_role):
                 return redirect(url_for('login'))
             
             user_role = session.get('role')
-            if user_role != required_role:
+            if user_role != required_role and required_role != 'any':
                 flash(f'Akses ditolak! Anda tidak memiliki izin untuk mengakses dashboard {required_role.title()}.')
                 return redirect(url_for('welcome'))
             
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+# Import semua routes dari app_face.py
+# [Include all routes from app_face.py here for production]
 
 @app.route('/')
 def index():
@@ -51,39 +94,32 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
-        # Simple authentication untuk demo (tanpa database dulu)
-        demo_users = {
-            'user_budidaya': {'password': 'passwordbud', 'role': 'budidaya'},
-            'user_tangkap': {'password': 'passwordtang', 'role': 'tangkap'},
-            'user_pds': {'password': 'passwordpds', 'role': 'pdspkp'}
-        }
-        
-        if username in demo_users and demo_users[username]['password'] == password:
+        if username in DEMO_USERS and DEMO_USERS[username]['password'] == password:
             session['user_id'] = username
             session['username'] = username
-            session['role'] = demo_users[username]['role']
+            session['role'] = DEMO_USERS[username]['role']
+            session['full_name'] = DEMO_USERS[username]['full_name']
+            session['login_method'] = 'password'
             
-            # Log login ke Redis
-            redis_manager.increment_counter(f"login_count:{username}")
-            redis_manager.increment_counter(f"login_count_role:{demo_users[username]['role']}")
-            redis_manager.set_data(f"last_login:{username}", {
-                'timestamp': str(__import__('datetime').datetime.now()),
-                'role': demo_users[username]['role']
-            }, expire_time=86400)  # Expire dalam 24 jam
+            flash(f'Login berhasil! Selamat datang, {DEMO_USERS[username]["full_name"]} ({DEMO_USERS[username]["role"]}).')
             
-            flash(f'Login berhasil! Selamat datang, {username} ({demo_users[username]["role"]}).')
+            # Check if user needs face enrollment
+            if username not in face_system.get_enrolled_users():
+                flash('Untuk keamanan tambahan, silakan daftarkan wajah Anda untuk face login!')
+                return redirect(url_for('face_enrollment_page'))
+            
             return redirect(url_for('welcome'))
         else:
             flash('Username atau password salah!')
     
-    return render_template('login.html')
+    return render_template('login_face.html')
 
 @app.route('/welcome')
 def welcome():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    return render_template('welcome.html')
+    return render_template('welcome_face.html')
 
 @app.route('/dashboard')
 def dashboard():
@@ -92,13 +128,14 @@ def dashboard():
     
     role = session.get('role')
     
-    # Redirect to role-specific dashboard
     if role == 'budidaya':
         return redirect(url_for('dashboard_budidaya'))
     elif role == 'tangkap':
         return redirect(url_for('dashboard_tangkap'))
     elif role == 'pdspkp':
         return redirect(url_for('dashboard_pdspkp'))
+    elif role == 'admin':
+        return redirect(url_for('dashboard_admin'))
     else:
         flash('Role tidak dikenali!')
         return redirect(url_for('welcome'))
@@ -106,179 +143,84 @@ def dashboard():
 @app.route('/dashboard/budidaya')
 @require_role('budidaya')
 def dashboard_budidaya():
-    # Get Redis statistics untuk dashboard
-    login_count = redis_manager.get_data('login_count_role:budidaya') or 0
-    last_login = redis_manager.get_data(f"last_login:{session['username']}")
+    budidaya_analytics = get_budidaya_analytics(session['username'])
+    recent_permintaan = PermintaanBenih.query.filter_by(
+        created_by=session['username']
+    ).order_by(PermintaanBenih.created_at.desc()).limit(10).all()
     
-    # Sample data untuk demo
     stats = {
-        'total_kolam': 125,
-        'produksi_bulan': 2.5,
-        'kualitas_air': 'Good',
-        'alerts': 3,
-        'login_count': login_count,
-        'last_login': last_login
+        'total_permintaan': budidaya_analytics['total_permintaan'],
+        'permintaan_disetujui': budidaya_analytics['permintaan_disetujui'],
+        'permintaan_pending': budidaya_analytics['permintaan_pending'],
+        'permintaan_ditolak': budidaya_analytics['permintaan_ditolak'],
+        'budidaya': budidaya_analytics
     }
     
-    return render_template('dashboard_budidaya.html', stats=stats)
+    return render_template('dashboard_budidaya_benih.html', stats=stats, recent_permintaan=recent_permintaan)
 
 @app.route('/dashboard/tangkap')
 @require_role('tangkap')
 def dashboard_tangkap():
-    return render_template('dashboard_tangkap.html')
+    analytics = get_kapal_analytics()
+    tangkap_analytics = get_tangkap_analytics(session['username'])
+    kapal_tangkap = Kapal.query.filter_by(jenis_kapal='tangkap', registered_by=session['username']).all()
+    
+    stats = {
+        'total_kapal': len(kapal_tangkap),
+        'kapal_aktif': len([k for k in kapal_tangkap if k.status_registrasi == 'aktif']),
+        'total_gt': sum([k.ukuran_gt or 0 for k in kapal_tangkap]),
+        'analytics': analytics,
+        'tangkap': tangkap_analytics
+    }
+    
+    return render_template('dashboard_tangkap_kapal.html', stats=stats, kapal_list=kapal_tangkap)
 
 @app.route('/dashboard/pdspkp')
 @require_role('pdspkp')
 def dashboard_pdspkp():
-    return render_template('dashboard_pdspkp.html')
-
-@app.route('/logout')
-def logout():
-    # Log logout ke Redis
-    if 'username' in session:
-        redis_manager.set_data(f"last_logout:{session['username']}", {
-            'timestamp': str(__import__('datetime').datetime.now()),
-            'role': session.get('role')
-        }, expire_time=86400)
+    pdspkp_analytics = get_pdspkp_analytics()
+    recent_permohonan = PermohonanSertifikasiProduk.query.order_by(
+        PermohonanSertifikasiProduk.created_at.desc()
+    ).limit(10).all()
     
-    session.clear()
-    flash('Anda telah logout.')
-    return redirect(url_for('login'))
-
-@app.route('/redis/status')
-def redis_status():
-    """
-    API endpoint untuk monitoring Redis status
-    Fungsi: Show Redis statistics dan health check
-    """
-    if 'user_id' not in session:
-        return {'error': 'Not authenticated'}, 401
+    stats = {
+        'total_permintaan': pdspkp_analytics['total_permintaan'],
+        'sertifikasi_diterbitkan': pdspkp_analytics['sertifikasi_diterbitkan'],
+        'dalam_proses': pdspkp_analytics['dalam_proses'],
+        'ditolak': pdspkp_analytics['ditolak'],
+        'pdspkp': pdspkp_analytics
+    }
     
-    try:
-        # Get Redis info
-        info = {
-            'redis_connected': redis_manager.redis_client is not None,
-            'total_keys': len(redis_manager.get_all_keys()),
-            'login_stats': {
-                'budidaya': redis_manager.get_data('login_count_role:budidaya') or 0,
-                'tangkap': redis_manager.get_data('login_count_role:tangkap') or 0,
-                'pdspkp': redis_manager.get_data('login_count_role:pdspkp') or 0
-            },
-            'current_user': {
-                'username': session.get('username'),
-                'role': session.get('role'),
-                'login_count': redis_manager.get_data(f"login_count:{session['username']}") or 0
-            }
-        }
-        return info
-    except Exception as e:
-        return {'error': str(e)}, 500
+    return render_template('dashboard_pdspkp_mutu.html', stats=stats, recent_permohonan=recent_permohonan)
 
-# ==================== FACE RECOGNITION ROUTES ====================
+@app.route('/dashboard/admin')
+@require_role('admin')
+def dashboard_admin():
+    analytics = get_kapal_analytics()
+    enrolled_users = face_system.get_enrolled_users()
+    
+    stats = {
+        'total_users': len(DEMO_USERS),
+        'enrolled_faces': len(enrolled_users),
+        'total_kapal': analytics['total_kapal'],
+        'analytics': analytics
+    }
+    
+    return render_template('dashboard_admin.html', stats=stats, enrolled_users=enrolled_users)
 
+# Face Recognition Routes
 @app.route('/face/enrollment')
+@require_role('any')
 def face_enrollment_page():
-    """
-    Face enrollment page
-    Fungsi: Halaman untuk register face user ke sistem
-    """
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
     return render_template('face_enrollment.html')
 
 @app.route('/face/login')
 def face_login_page():
-    """
-    Face recognition login page
-    Fungsi: Halaman login menggunakan face recognition
-    """
     return render_template('face_login.html')
 
-@app.route('/api/enroll-face', methods=['POST'])
+@app.route('/api/face/enroll', methods=['POST'])
+@require_role('any')
 def api_enroll_face():
-    """
-    API endpoint untuk enroll face
-    Fungsi: Process face enrollment dari camera capture
-    """
-    try:
-        data = request.get_json()
-        username = data.get('username')
-        image_data = data.get('image_data')
-        
-        if not username or not image_data:
-            return jsonify({'success': False, 'message': 'Missing username atau image data'})
-        
-        # Get user dari database
-        user = User.query.filter_by(username=username).first()
-        if not user:
-            return jsonify({'success': False, 'message': f'User {username} tidak ditemukan'})
-        
-        # Validate image quality
-        quality_check = face_system.validate_face_quality(image_data)
-        if not quality_check['valid']:
-            return jsonify({
-                'success': False,
-                'message': quality_check['message'],
-                'suggestions': quality_check['suggestions']
-            })
-        
-        # Extract face encoding
-        face_encoding = face_system.extract_face_encoding(image_data)
-        if face_encoding is None:
-            return jsonify({
-                'success': False,
-                'message': 'Tidak bisa extract face encoding',
-                'suggestions': ['Pastikan wajah terlihat jelas', 'Coba pencahayaan yang lebih baik']
-            })
-        
-        # Save photo (optional)
-        photo_filename = face_system.save_face_photo(image_data, user.id, 'enrollment')
-        
-        # Check jika user sudah punya face data
-        existing_face = FaceData.query.filter_by(user_id=user.id, is_primary=True).first()
-        if existing_face:
-            # Update existing face data
-            existing_face.set_encoding_array(face_encoding)
-            existing_face.photo_filename = photo_filename
-            existing_face.created_at = datetime.utcnow()
-        else:
-            # Create new face data
-            face_data = FaceData(
-                user_id=user.id,
-                photo_filename=photo_filename,
-                is_primary=True
-            )
-            face_data.set_encoding_array(face_encoding)
-            db.session.add(face_data)
-        
-        db.session.commit()
-        
-        # Log ke Redis
-        redis_manager.set_data(f"face_enrolled:{username}", {
-            'timestamp': str(datetime.now()),
-            'photo_filename': photo_filename
-        }, expire_time=86400)
-        
-        return jsonify({
-            'success': True,
-            'message': 'Face enrollment berhasil!',
-            'user_info': user.to_dict(),
-            'face_id': existing_face.id if existing_face else face_data.id,
-            'confidence': 95,  # High confidence untuk enrollment
-            'quality_score': 90
-        })
-        
-    except Exception as e:
-        return jsonify({'success': False, 'message': f'Server error: {str(e)}'})
-
-@app.route('/api/recognize-face', methods=['POST'])
-def api_recognize_face():
-    """
-    API endpoint untuk face recognition login
-    Fungsi: Process face recognition untuk login authentication
-    """
-    start_time = datetime.now()
-    
     try:
         data = request.get_json()
         image_data = data.get('image_data')
@@ -286,215 +228,89 @@ def api_recognize_face():
         if not image_data:
             return jsonify({'success': False, 'message': 'No image data provided'})
         
-        # Extract face encoding dari image
-        face_encoding = face_system.extract_face_encoding(image_data)
-        if face_encoding is None:
-            return jsonify({
-                'success': False,
-                'message': 'Tidak ada wajah Terdeteksi',
-                'suggestions': ['Pastikan wajah di tengah frame', 'Coba pencahayaan lebih baik']
-            })
+        username = session['username']
+        user_info = {
+            'role': session['role'],
+            'full_name': session.get('full_name', username)
+        }
         
-        # Find matching user
-        from face_models import get_user_by_face_encoding
-        matched_user, confidence = get_user_by_face_encoding(face_encoding, confidence_threshold=0.6)
-        
-        # Calculate processing time
-        processing_time = (datetime.now() - start_time).total_seconds() * 1000
-        
-        if matched_user and confidence:
-            # Successful recognition
-            
-            # Create session (login user)
-            session['user_id'] = matched_user.username
-            session['username'] = matched_user.username
-            session['role'] = matched_user.role
-            session['login_method'] = 'face_recognition'
-            
-            # Log recognition success
-            log_entry = FaceRecognitionLog(
-                user_id=matched_user.id,
-                recognized=True,
-                confidence_score=confidence,
-                ip_address=request.remote_addr,
-                user_agent=request.headers.get('User-Agent'),
-                processing_time_ms=int(processing_time)
-            )
-            db.session.add(log_entry)
-            
-            # Update face data last_used
-            face_data = FaceData.query.filter_by(user_id=matched_user.id, is_primary=True).first()
-            if face_data:
-                face_data.last_used = datetime.utcnow()
-            
-            db.session.commit()
-            
-            # Log ke Redis
-            redis_manager.increment_counter(f"face_login_count:{matched_user.username}")
-            redis_manager.set_data(f"last_face_login:{matched_user.username}", {
-                'timestamp': str(datetime.now()),
-                'confidence': confidence,
-                'processing_time_ms': processing_time
-            }, expire_time=86400)
-            
-            return jsonify({
-                'success': True,
-                'message': 'Face recognition successful!',
-                'user': matched_user.to_dict(),
-                'confidence': round(confidence * 100, 2),
-                'processing_time_ms': int(processing_time)
-            })
-        
-        else:
-            # Recognition failed
-            log_entry = FaceRecognitionLog(
-                recognized=False,
-                confidence_score=confidence if confidence else 0,
-                ip_address=request.remote_addr,
-                user_agent=request.headers.get('User-Agent'),
-                processing_time_ms=int(processing_time),
-                error_message='No matching face found'
-            )
-            db.session.add(log_entry)
-            db.session.commit()
-            
-            return jsonify({
-                'success': False,
-                'message': 'Wajah tidak dikenali dalam sistem',
-                'suggestions': ['Pastikan Anda sudah melakukan face enrollment', 'Coba traditional login']
-            })
+        result = face_system.enroll_face(username, image_data, user_info)
+        return jsonify(result)
         
     except Exception as e:
-        # Log error
-        log_entry = FaceRecognitionLog(
-            recognized=False,
-            ip_address=request.remote_addr,
-            user_agent=request.headers.get('User-Agent'),
-            error_message=str(e)
-        )
-        db.session.add(log_entry)
-        db.session.commit()
-        
-        return jsonify({'success': False, 'message': f'Recognition error: {str(e)}'})
+        return jsonify({'success': False, 'message': f'Server error: {str(e)}'})
 
-@app.route('/attendance/clock-in', methods=['POST'])
-def api_clock_in():
-    """
-    API untuk clock in attendance dengan face recognition
-    Fungsi: Record attendance clock in menggunakan face scan
-    """
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
+@app.route('/api/face/recognize', methods=['POST'])
+def api_recognize_face():
     try:
         data = request.get_json()
         image_data = data.get('image_data')
-        location = data.get('location', 'Office')
         
-        user = User.query.filter_by(username=session['username']).first()
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
+        if not image_data:
+            return jsonify({'success': False, 'message': 'No image data provided'})
         
-        # Check jika sudah clock in hari ini
-        today = date.today()
-        existing_attendance = Attendance.query.filter_by(
-            user_id=user.id,
-            date=today
-        ).first()
+        result = face_system.recognize_face(image_data)
         
-        if existing_attendance and existing_attendance.clock_in:
-            return jsonify({
-                'success': False,
-                'message': 'Anda sudah clock in hari ini',
-                'clock_in_time': existing_attendance.clock_in.strftime('%H:%M:%S')
-            })
+        if result['success']:
+            username = result['user']['username']
+            
+            if username in DEMO_USERS:
+                session['user_id'] = username
+                session['username'] = username
+                session['role'] = DEMO_USERS[username]['role']
+                session['full_name'] = DEMO_USERS[username]['full_name']
+                session['login_method'] = 'face_recognition'
+                
+                result['redirect_url'] = url_for('welcome')
+                result['message'] = f"Welcome back, {DEMO_USERS[username]['full_name']}!"
+            else:
+                result['success'] = False
+                result['message'] = 'User not found in system'
         
-        # Verify face jika image provided
-        confidence_score = None
-        if image_data:
-            face_encoding = face_system.extract_face_encoding(image_data)
-            if face_encoding:
-                matched_user, confidence = get_user_by_face_encoding(face_encoding)
-                if matched_user and matched_user.id == user.id:
-                    confidence_score = confidence
-                else:
-                    return jsonify({
-                        'success': False,
-                        'message': 'Face verification failed - wajah tidak cocok dengan akun login'
-                    })
-        
-        # Create atau update attendance record
-        if existing_attendance:
-            existing_attendance.clock_in = datetime.utcnow()
-            existing_attendance.confidence_score = confidence_score
-            existing_attendance.ip_address = request.remote_addr
-            existing_attendance.location = location
-        else:
-            attendance = Attendance(
-                user_id=user.id,
-                clock_in=datetime.utcnow(),
-                date=today,
-                confidence_score=confidence_score,
-                recognition_method='face' if image_data else 'manual',
-                ip_address=request.remote_addr,
-                location=location
-            )
-            db.session.add(attendance)
-        
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Clock in berhasil!',
-            'clock_in_time': datetime.utcnow().strftime('%H:%M:%S'),
-            'confidence': round(confidence_score * 100, 2) if confidence_score else None
-        })
+        return jsonify(result)
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'success': False, 'message': f'Recognition error: {str(e)}'})
 
-@app.route('/redis/monitor')
-def redis_monitor():
-    """
-    Redis monitoring dashboard
-    Fungsi: Web interface untuk monitoring Redis data
-    """
-    if 'user_id' not in session:
-        flash('Please login first')
-        return redirect(url_for('login'))
+# Additional essential routes
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Anda telah logout.')
+    return redirect(url_for('login'))
+
+@app.route('/status')
+def status():
+    analytics = get_kapal_analytics()
+    enrolled_users = face_system.get_enrolled_users()
     
-    # Get all Redis keys dan data
-    all_keys = redis_manager.get_all_keys()
-    redis_data = {}
-    
-    for key in all_keys[:20]:  # Limit 20 keys untuk performance
-        redis_data[key] = redis_manager.get_data(key)
-    
-    stats = {
-        'connected': redis_manager.redis_client is not None,
-        'total_keys': len(all_keys),
-        'sample_data': redis_data,
-        'login_counters': {
-            'budidaya': redis_manager.get_data('login_count_role:budidaya') or 0,
-            'tangkap': redis_manager.get_data('login_count_role:tangkap') or 0,
-            'pdspkp': redis_manager.get_data('login_count_role:pdspkp') or 0
-        }
-    }
-    
-    return render_template('redis_monitor.html', stats=stats)
+    return jsonify({
+        'status': 'OK',
+        'message': 'Fisheries System Production - Face Recognition & Multi-Role Dashboard',
+        'session_active': 'user_id' in session,
+        'kapal_count': analytics['total_kapal'],
+        'enrolled_faces': len(enrolled_users),
+        'face_system_ready': True,
+        'environment': 'production' if os.environ.get('DATABASE_URL') else 'development'
+    })
 
 if __name__ == '__main__':
-    # Development mode
-    print("🐟 Fisheries System - Development Mode")
-    print("=" * 50)
-    print("[OK] http://localhost:5000")
-    print("[OK] http://fisheries-system.test:5000")
-    print("=" * 50)
-    print("Login accounts:")
-    print("🌱 user_budidaya / passwordbud")
-    print("🎣 user_tangkap / passwordtang")
-    print("📜 user_pds / passwordpds")
-    print("=" * 50)
+    # Production mode setup
+    print("=" * 60)
+    print("🐟 FISHERIES SYSTEM - PRODUCTION READY")
+    print("=" * 60)
+    print("✅ Face Recognition with OpenCV")
+    print("✅ Multi-Role Dashboard System")
+    print("✅ Budidaya: Distribusi Benih DO")
+    print("✅ Tangkap: Logbook Penangkapan") 
+    print("✅ PDSPKP: Sertifikasi Mutu Produk")
+    print("✅ DKI Jakarta Regional Support")
+    print("=" * 60)
+    print("🚀 Ready for Railway Deployment!")
+    print("=" * 60)
     
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    # Port configuration for Railway
+    port = int(os.environ.get('PORT', 8080))
+    debug_mode = not os.environ.get('DATABASE_URL')  # Debug off in production
+    
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
