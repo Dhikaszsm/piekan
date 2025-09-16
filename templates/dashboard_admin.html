@@ -186,10 +186,10 @@
                             </div>
                             <div class="col-md-3 mb-3">
                                 <div class="d-grid">
-                                    <a href="{{ url_for('list_kapal') }}" class="btn btn-info">
-                                        <i class="fas fa-ship me-2"></i>
-                                        Manage Kapal
-                                    </a>
+                                    <button class="btn btn-info" onclick="showUserManagement()">
+                                        <i class="fas fa-users-cog me-2"></i>
+                                        User Management
+                                    </button>
                                 </div>
                             </div>
                             <div class="col-md-3 mb-3">
@@ -492,13 +492,40 @@
                 });
         }
 
+        function showUserManagement() {
+            alert('👥 USER MANAGEMENT SYSTEM\n\n' +
+                  `Total Registered Users: {{ stats.total_users }}\n` +
+                  `Face Recognition Enrolled: {{ stats.enrolled_faces }}\n\n` +
+                  
+                  'USER CATEGORIES:\n' +
+                  '🌱 Budidaya: 5 users (natalie, putri, manda, besty, ari)\n' +
+                  '🎣 Tangkap: 4 users (fauzi, salman, fadlan, khairinal)\n' +
+                  '📜 PDSPKP: 4 users (elis, rahayu, dhilla, endah)\n' +
+                  '⚙️ Admin: 2 users (admin, dhika)\n\n' +
+                  
+                  'FACE RECOGNITION:\n' +
+                  '- Manage enrolled faces below\n' +
+                  '- Delete face data if needed\n' +
+                  '- Monitor enrollment status\n\n' +
+                  
+                  'SYSTEM MONITORING:\n' +
+                  '- User login activity\n' +
+                  '- Dashboard access logs\n' +
+                  '- Face recognition performance');
+        }
+
         function downloadBackup() {
-            alert('Backup functionality would download:\n\n' +
-                  '- User data\n' +
-                  '- Kapal registration data\n' +
-                  '- Face recognition data\n' +
-                  '- System logs\n\n' +
-                  'This feature can be implemented based on requirements.');
+            alert('💾 SYSTEM BACKUP\n\n' +
+                  'Data yang akan di-backup:\n' +
+                  '✅ User accounts & face data\n' +
+                  '✅ Budidaya: Permintaan benih\n' +
+                  '✅ Tangkap: Trip & logbook data\n' +
+                  '✅ PDSPKP: Sertifikasi & monitoring\n' +
+                  '✅ System configurations\n' +
+                  '✅ Analytics & reports\n\n' +
+                  'Format: JSON/Excel export\n' +
+                  'Frequency: Daily/Weekly scheduled\n\n' +
+                  '[Fitur akan diimplementasi sesuai kebutuhan]');
         }
     </script>
 </body>
