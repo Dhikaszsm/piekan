@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Kapal: {{ kapal.nama_kapal }} - Fisheries System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .info-card {
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .info-card.primary { border-color: #007bff; }
+        .info-card.success { border-color: #28a745; }
+        .info-card.info { border-color: #17a2b8; }
+        .info-card.warning { border-color: #ffc107; }
+        .info-card.danger { border-color: #dc3545; }
+        
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: #dee2e6;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.5rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #007bff;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #007bff;
+        }
+        
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .logistik-item {
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .logistik-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .photo-item {
+            aspect-ratio: 1;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .photo-item:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('welcome') }}">
+                <i class="fas fa-fish me-2 text-primary"></i>
+                Fisheries System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a href="{{ url_for('list_kapal') }}" class="btn btn-outline-secondary btn-sm me-2">
+                    <i class="fas fa-arrow-left me-1"></i>Kembali
+                </a>
+                <span class="nav-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    {{ session.username }} {% if session.user_role %}({{ session.user_role|title }}){% endif %}
+                </span>
+                <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow-lg mb-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-ship fa-3x text-primary me-3"></i>
+                                    <div>
+                                        <h2 class="fw-bold mb-1">{{ kapal.nama_kapal }}</h2>
+                                        <p class="text-muted mb-0">
+                                            <span class="badge bg-primary me-2">{{ kapal.nomor_registrasi }}</span>
+                                            {% if kapal.jenis_usaha == 'budidaya' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-seedling me-1"></i>Budidaya
+                                            </span>
+                                            {% elif kapal.jenis_usaha == 'tangkap' %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-anchor me-1"></i>Tangkap
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-ship me-1"></i>{{ kapal.jenis_usaha|title }}
+                                            </span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                {% if session.user_role in ['budidaya', 'tangkap'] and session.username == kapal.created_by %}
+                                <a href="{{ url_for('edit_kapal', kapal_id=kapal.id) }}" class="btn btn-warning">
+                                    <i class="fas fa-edit me-1"></i>Edit Data
+                                </a>
+                                {% endif %}
+                                {% if session.user_role == 'pdspkp' %}
+                                <button class="btn btn-outline-success" onclick="manageCertification()">
+                                    <i class="fas fa-certificate me-1"></i>Kelola Sertifikasi
+                                </button>
+                                {% endif %}
+                                <button class="btn btn-custom" onclick="printDetail()">
+                                    <i class="fas fa-print me-1"></i>Print
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <!-- Left Column - Main Info -->
+            <div class="col-lg-8">
+                <!-- Basic Information -->
+                <div class="card card-custom shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informasi Dasar</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Nama Kapal:</td>
+                                        <td>{{ kapal.nama_kapal }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">No. Registrasi:</td>
+                                        <td><span class="badge bg-primary">{{ kapal.nomor_registrasi }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Kode Kapal:</td>
+                                        <td>{{ kapal.kode_kapal or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Jenis Usaha:</td>
+                                        <td>
+                                            {% if kapal.jenis_usaha == 'budidaya' %}
+                                            <i class="fas fa-seedling text-success me-1"></i>Budidaya
+                                            {% elif kapal.jenis_usaha == 'tangkap' %}
+                                            <i class="fas fa-anchor text-info me-1"></i>Penangkap Ikan
+                                            {% else %}
+                                            <i class="fas fa-ship text-secondary me-1"></i>{{ kapal.jenis_usaha|title }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Status:</td>
+                                        <td>
+                                            {% if kapal.status_registrasi == 'aktif' %}
+                                            <span class="status-badge" style="background: #d4edda; color: #155724;">
+                                                <i class="fas fa-check-circle me-1"></i>Aktif
+                                            </span>
+                                            {% else %}
+                                            <span class="status-badge" style="background: #f8d7da; color: #721c24;">
+                                                <i class="fas fa-times-circle me-1"></i>{{ kapal.status_registrasi|title }}
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Ukuran GT:</td>
+                                        <td>{{ kapal.ukuran_gt or '-' }} {% if kapal.ukuran_gt %}GT{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Panjang:</td>
+                                        <td>{{ kapal.panjang_kapal or '-' }} {% if kapal.panjang_kapal %}m{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Lebar:</td>
+                                        <td>{{ kapal.lebar_kapal or '-' }} {% if kapal.lebar_kapal %}m{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Kedalaman:</td>
+                                        <td>{{ kapal.kedalaman_kapal or '-' }} {% if kapal.kedalaman_kapal %}m{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Material:</td>
+                                        <td>{{ kapal.material_kapal or '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Owner Information -->
+                <div class="card card-custom shadow mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-user me-2"></i>Informasi Pemilik & Operasional</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold text-success mb-3">Data Pemilik</h6>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Nama Pemilik:</td>
+                                        <td>{{ kapal.nama_pemilik }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">NIK:</td>
+                                        <td>{{ kapal.nik_pemilik or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Alamat:</td>
+                                        <td>{{ kapal.alamat_pemilik or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Provinsi:</td>
+                                        <td>{{ kapal.provinsi or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Telepon:</td>
+                                        <td>{{ kapal.telepon_pemilik or '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold text-success mb-3">Data Operasional</h6>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Nahkoda:</td>
+                                        <td>{{ kapal.nama_nahkoda or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Jumlah ABK:</td>
+                                        <td>{{ kapal.jumlah_abk or '-' }} {% if kapal.jumlah_abk %}orang{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Pelabuhan Pangkalan:</td>
+                                        <td>{{ kapal.pelabuhan_pangkalan or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Area Operasi:</td>
+                                        <td>{{ kapal.area_operasi or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Tgl. Registrasi:</td>
+                                        <td>{{ kapal.tanggal_registrasi.strftime('%d/%m/%Y') if kapal.tanggal_registrasi else '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Engine & Equipment -->
+                <div class="card card-custom shadow mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Mesin & Peralatan</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold text-info mb-3">Spesifikasi Mesin</h6>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Jenis Mesin:</td>
+                                        <td>{{ kapal.jenis_mesin or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Merk Mesin:</td>
+                                        <td>{{ kapal.merk_mesin or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Daya Mesin:</td>
+                                        <td>{{ kapal.daya_mesin or '-' }} {% if kapal.daya_mesin %}HP{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Jumlah Mesin:</td>
+                                        <td>{{ kapal.jumlah_mesin or '-' }} {% if kapal.jumlah_mesin %}unit{% endif %}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold text-info mb-3">Peralatan Khusus</h6>
+                                {% if kapal.jenis_usaha == 'budidaya' %}
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Jumlah Kolam:</td>
+                                        <td>{{ kapal.jumlah_kolam or '-' }} {% if kapal.jumlah_kolam %}unit{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Kapasitas Kolam:</td>
+                                        <td>{{ kapal.kapasitas_kolam or '-' }} {% if kapal.kapasitas_kolam %}m³{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Sistem Aerasi:</td>
+                                        <td>{{ kapal.sistem_aerasi or '-' }}</td>
+                                    </tr>
+                                </table>
+                                {% elif kapal.jenis_usaha == 'tangkap' %}
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Jenis Alat Tangkap:</td>
+                                        <td>{{ kapal.alat_tangkap or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Kapasitas Palka:</td>
+                                        <td>{{ kapal.kapasitas_palka or '-' }} {% if kapal.kapasitas_palka %}ton{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Fish Finder:</td>
+                                        <td>{{ 'Ya' if kapal.fish_finder else 'Tidak' }}</td>
+                                    </tr>
+                                </table>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logistik History -->
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Riwayat Logistik</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if logistik_history %}
+                        <div class="timeline">
+                            {% for log in logistik_history %}
+                            <div class="timeline-item">
+                                <div class="logistik-item p-3 border rounded bg-light">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <h6 class="fw-bold mb-2">{{ log.jenis_logistik|title }}</h6>
+                                            <p class="text-muted mb-1">{{ log.deskripsi or 'Tidak ada deskripsi' }}</p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>{{ log.tanggal.strftime('%d/%m/%Y %H:%M') if log.tanggal else '-' }}
+                                                {% if log.lokasi %}
+                                                | <i class="fas fa-map-marker-alt me-1"></i>{{ log.lokasi }}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            {% if log.jumlah %}
+                                            <div class="h5 mb-0 text-primary">{{ log.jumlah }} {{ log.satuan or 'unit' }}</div>
+                                            {% endif %}
+                                            {% if log.status %}
+                                            <span class="badge bg-{{ 'success' if log.status == 'selesai' else 'warning' }}">
+                                                {{ log.status|title }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">Belum ada riwayat logistik</h6>
+                            <p class="text-muted small">Data aktivitas logistik akan muncul di sini</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Status & Actions -->
+            <div class="col-lg-4">
+                <!-- Status Overview -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card info-card primary shadow">
+                            <div class="card-body text-center">
+                                <i class="fas fa-tachometer-alt fa-2x text-primary mb-2"></i>
+                                <h6 class="fw-bold">Status Operasi</h6>
+                                <h4 class="text-primary">{{ kapal.status_operasi|title if kapal.status_operasi else 'Tidak Aktif' }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certification Status -->
+                <div class="card card-custom shadow mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-certificate me-2"></i>Status Sertifikasi</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if kapal.status_sertifikasi %}
+                        <div class="text-center">
+                            {% if kapal.status_sertifikasi == 'tersertifikasi' %}
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h6 class="text-success fw-bold">Tersertifikasi</h6>
+                            {% elif kapal.status_sertifikasi == 'pending' %}
+                            <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                            <h6 class="text-warning fw-bold">Menunggu Review</h6>
+                            {% else %}
+                            <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                            <h6 class="text-danger fw-bold">Bermasalah</h6>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="text-center">
+                            <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">Belum Disertifikasi</h6>
+                        </div>
+                        {% endif %}
+                        
+                        {% if kapal.tanggal_sertifikat %}
+                        <hr>
+                        <div class="small text-muted text-center">
+                            <i class="fas fa-calendar me-1"></i>
+                            Tanggal: {{ kapal.tanggal_sertifikat.strftime('%d/%m/%Y') }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <div class="card info-card success shadow">
+                            <div class="card-body text-center p-3">
+                                <i class="fas fa-calendar-check fa-lg text-success"></i>
+                                <div class="fw-bold mt-2">{{ ((current_date - kapal.tanggal_registrasi).days if kapal.tanggal_registrasi else 0) }}</div>
+                                <small class="text-muted">Hari Aktif</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card info-card warning shadow">
+                            <div class="card-body text-center p-3">
+                                <i class="fas fa-list-alt fa-lg text-warning"></i>
+                                <div class="fw-bold mt-2">{{ logistik_count or 0 }}</div>
+                                <small class="text-muted">Aktivitas Logistik</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents -->
+                <div class="card card-custom shadow mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="fas fa-folder me-2"></i>Dokumen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-pdf text-danger me-2"></i>
+                                Surat Izin Usaha Perikanan
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-alt text-primary me-2"></i>
+                                Sertifikat Registrasi
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-image text-success me-2"></i>
+                                Foto Kapal
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-signature text-warning me-2"></i>
+                                Dokumen Asuransi
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Photo Gallery -->
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Galeri Foto</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="photo-gallery">
+                            <div class="photo-item">
+                                <i class="fas fa-ship fa-2x text-muted"></i>
+                            </div>
+                            <div class="photo-item">
+                                <i class="fas fa-plus fa-2x text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-upload me-1"></i>Upload Foto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function printDetail() {
+            window.print();
+        }
+        
+        function manageCertification() {
+            alert('Fitur kelola sertifikasi akan segera tersedia');
+        }
+        
+        // Add any additional interactive features
+        document.addEventListener('DOMContentLoaded', function() {
+            // Photo gallery interaction
+            document.querySelectorAll('.photo-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    // Handle photo click/upload
+                    console.log('Photo item clicked');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

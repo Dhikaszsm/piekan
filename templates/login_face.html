@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Fisheries System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card-header-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        #video {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 10px;
+            border: 3px solid #667eea;
+        }
+        .face-login-container {
+            display: none;
+        }
+        .face-status {
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <div class="card shadow-lg mt-3" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.95);">
+                    <div class="card-header card-header-custom text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-fish fa-3x mb-2"></i>
+                        </div>
+                        <h3 class="fw-bold mb-1">Fisheries System</h3>
+                        <p class="mb-0 opacity-90">Sistem Informasi Perikanan dengan Face Recognition</p>
+                    </div>
+                    <div class="card-body p-4">
+                        
+                        <!-- Flash Messages -->
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <!-- Login Method Tabs -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Traditional Login -->
+                                <div class="card h-100">
+                                    <div class="card-header bg-primary text-white text-center">
+                                        <h5 class="mb-0"><i class="fas fa-key me-2"></i>Normal Login Section</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="POST">
+                                            <div class="mb-3">
+                                                <label for="username" class="form-label fw-semibold">Username</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                                    <input type="text" class="form-control" id="username" name="username" required placeholder="Masukkan username">
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="password" class="form-label fw-semibold">Password</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                                    <input type="password" class="form-control" id="password" name="password" required placeholder="Masukkan password">
+                                                </div>
+                                            </div>
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-custom">
+                                                    <i class="fas fa-sign-in-alt me-2"></i>Login dengan Password
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <!-- Face Recognition Login -->
+                                <div class="card h-100">
+                                    <div class="card-header bg-success text-white text-center">
+                                        <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Face Recognition Login</h5>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <div id="traditional-face-login">
+                                            <i class="fas fa-camera fa-3x text-success mb-3"></i>
+                                            <p class="mb-3">Login menggunakan wajah Anda</p>
+                                            <button type="button" class="btn btn-success" onclick="startFaceLogin()">
+                                                <i class="fas fa-camera me-2"></i>Mulai Face Login
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="face-login-container" id="face-login-container">
+                                            <video id="video" autoplay muted></video>
+                                            <canvas id="canvas" style="display: none;"></canvas>
+                                            
+                                            <div class="face-status mt-3" id="face-status">
+                                                <div class="spinner-border text-success" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <span class="ms-2">Memulai kamera...</span>
+                                            </div>
+                                            
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-success me-2" onclick="captureAndRecognize()">
+                                                    <i class="fas fa-camera me-2"></i>Ambil Foto & Login
+                                                </button>
+                                                <button type="button" class="btn btn-secondary" onclick="stopFaceLogin()">
+                                                    <i class="fas fa-times me-2"></i>Batal
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Demo Accounts Info -->
+                        <div class="text-center mt-4">
+                            <div class="bg-light p-3 rounded-3">
+                                <small class="text-muted d-block mb-3">
+                                    <i class="fas fa-info-circle me-1"></i>List Akun Tersedia
+                                </small>
+                                
+                                <!-- Budidaya Users -->
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-success mb-2">👩‍🌾 BUDIDAYA</h6>
+                                    <div class="row text-center">
+                                        <div class="col-2">
+                                            <span class="badge bg-success d-block mb-1">Natalie</span>
+                                            <small class="text-muted small">natalie</small>
+                                            <small class="text-muted d-block small">natalie123</small>
+                                        </div>
+                                        <div class="col-2">
+                                            <span class="badge bg-success d-block mb-1">Putri</span>
+                                            <small class="text-muted small">putri</small>
+                                            <small class="text-muted d-block small">putri123</small>
+                                        </div>
+                                        <div class="col-2">
+                                            <span class="badge bg-success d-block mb-1">Manda</span>
+                                            <small class="text-muted small">manda</small>
+                                            <small class="text-muted d-block small">manda123</small>
+                                        </div>
+                                        <div class="col-2">
+                                            <span class="badge bg-success d-block mb-1">Besty</span>
+                                            <small class="text-muted small">besty</small>
+                                            <small class="text-muted d-block small">besty123</small>
+                                        </div>
+                                        <div class="col-2">
+                                            <span class="badge bg-success d-block mb-1">Ari</span>
+                                            <small class="text-muted small">ari</small>
+                                            <small class="text-muted d-block small">ari123</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tangkap Users -->
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-info mb-2">🎣 TANGKAP</h6>
+                                    <div class="row text-center">
+                                        <div class="col-3">
+                                            <span class="badge bg-info d-block mb-1">Fauzi</span>
+                                            <small class="text-muted small">fauzi</small>
+                                            <small class="text-muted d-block small">fauzi123</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <span class="badge bg-info d-block mb-1">Salman</span>
+                                            <small class="text-muted small">salman</small>
+                                            <small class="text-muted d-block small">salman123</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <span class="badge bg-info d-block mb-1">Fadlan</span>
+                                            <small class="text-muted small">fadlan</small>
+                                            <small class="text-muted d-block small">fadlan123</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <span class="badge bg-info d-block mb-1">Khairinal</span>
+                                            <small class="text-muted small">khairinal</small>
+                                            <small class="text-muted d-block small">khairinal123</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- PDSPKP Users -->
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-primary mb-2">📜 PDSPKP</h6>
+                                    <div class="row text-center">
+                                        <div class="col-3">
+                                            <span class="badge bg-primary d-block mb-1">Elis</span>
+                                            <small class="text-muted small">elis</small>
+                                            <small class="text-muted d-block small">elis123</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <span class="badge bg-primary d-block mb-1">Rahayu</span>
+                                            <small class="text-muted small">rahayu</small>
+                                            <small class="text-muted d-block small">rahayu123</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <span class="badge bg-primary d-block mb-1">Dhilla</span>
+                                            <small class="text-muted small">dhilla</small>
+                                            <small class="text-muted d-block small">dhilla123</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <span class="badge bg-primary d-block mb-1">Endah</span>
+                                            <small class="text-muted small">endah</small>
+                                            <small class="text-muted d-block small">endah123</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Admin -->
+                                <div class="text-center">
+                                    <h6 class="fw-bold text-dark mb-2">⚙️ ADMIN</h6>
+                                    <div class="d-flex justify-content-center gap-3">
+                                        <div>
+                                            <span class="badge bg-dark d-block mb-1">Admin</span>
+                                            <small class="text-muted small">admin / admin123</small>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-secondary d-block mb-1">Dhika</span>
+                                            <small class="text-muted small">dhika / dhika123</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <hr class="my-3">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    <strong>Tip:</strong> Login dengan password terlebih dahulu, lalu daftarkan wajah untuk Face Recognition
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="text-center mt-4">
+                    <small class="text-white opacity-75">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Fisheries Management System with OpenCV Face Recognition
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let stream;
+        let video;
+        let canvas;
+        let recognitionInterval;
+        
+        function startFaceLogin() {
+            document.getElementById('traditional-face-login').style.display = 'none';
+            document.getElementById('face-login-container').style.display = 'block';
+            
+            video = document.getElementById('video');
+            canvas = document.getElementById('canvas');
+            
+            // Request camera access
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(mediaStream) {
+                    stream = mediaStream;
+                    video.srcObject = stream;
+                    updateStatus('<i class="fas fa-camera text-success"></i> Kamera aktif - Posisikan wajah di tengah');
+                })
+                .catch(function(err) {
+                    console.error('Error accessing camera:', err);
+                    updateStatus('<i class="fas fa-exclamation-triangle text-danger"></i> Error: Tidak dapat mengakses kamera');
+                });
+        }
+        
+        function stopFaceLogin() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            if (recognitionInterval) {
+                clearInterval(recognitionInterval);
+            }
+            
+            document.getElementById('traditional-face-login').style.display = 'block';
+            document.getElementById('face-login-container').style.display = 'none';
+        }
+        
+        function captureAndRecognize() {
+            if (!video.videoWidth || !video.videoHeight) {
+                updateStatus('<i class="fas fa-exclamation-triangle text-warning"></i> Menunggu kamera ready...');
+                return;
+            }
+            
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw video frame to canvas
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            
+            // Convert to base64
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            updateStatus('<i class="fas fa-spinner fa-spin text-primary"></i> Mengenali wajah...');
+            
+            // Send to server for recognition
+            fetch('/api/face/recognize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image_data: imageData
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateStatus(`<i class="fas fa-check-circle text-success"></i> Login berhasil! Welcome ${data.user.user_info.full_name || data.user.username}`);
+                    
+                    // Redirect after delay
+                    setTimeout(() => {
+                        if (data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        } else {
+                            window.location.reload();
+                        }
+                    }, 2000);
+                } else {
+                    updateStatus(`<i class="fas fa-times-circle text-danger"></i> ${data.message}`);
+                    if (data.confidence) {
+                        updateStatus(`<i class="fas fa-info-circle text-info"></i> Confidence: ${data.match_percentage.toFixed(1)}%`);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                updateStatus('<i class="fas fa-exclamation-triangle text-danger"></i> Error saat mengenali wajah');
+            });
+        }
+        
+        function updateStatus(html) {
+            document.getElementById('face-status').innerHTML = html;
+        }
+        
+        // Auto capture setiap 3 detik jika user mengklik start (opsional)
+        function startAutoRecognition() {
+            recognitionInterval = setInterval(() => {
+                captureAndRecognize();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

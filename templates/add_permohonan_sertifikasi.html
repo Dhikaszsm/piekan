@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permohonan Sertifikasi Produk - PDSPKP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        .form-section {
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('welcome') }}">
+                <i class="fas fa-fish me-2 text-primary"></i>
+                Fisheries System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    {{ session.username }} (PDSPKP)
+                </span>
+                <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('dashboard_pdspkp') }}">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow-lg mb-4">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-file-plus fa-3x text-primary mb-3"></i>
+                        <h2 class="fw-bold mb-2">Permohonan Sertifikasi Produk</h2>
+                        <p class="text-muted mb-0">Form permohonan sertifikasi SKP/GMP untuk produk perikanan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Form Permohonan -->
+        <form method="POST">
+            <div class="row">
+                <!-- Data Permohonan & Perusahaan -->
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-building me-2"></i>Data Perusahaan</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-section">
+                                <div class="mb-3">
+                                    <label for="nama_pt" class="form-label fw-semibold">Nama PT/Perusahaan *</label>
+                                    <input type="text" class="form-control" id="nama_pt" name="nama_pt" required
+                                           placeholder="Contoh: PT Bahari Mandiri Sejahtera">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="alamat_pt" class="form-label fw-semibold">Alamat Lengkap *</label>
+                                    <textarea class="form-control" id="alamat_pt" name="alamat_pt" rows="3" required
+                                              placeholder="Alamat lengkap perusahaan"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="wilayah_dki" class="form-label fw-semibold">Wilayah DKI Jakarta *</label>
+                                    <select class="form-control" id="wilayah_dki" name="wilayah_dki" required>
+                                        <option value="">Pilih Wilayah DKI</option>
+                                        <option value="Jakarta Timur">Jakarta Timur</option>
+                                        <option value="Jakarta Barat">Jakarta Barat</option>
+                                        <option value="Jakarta Selatan">Jakarta Selatan</option>
+                                        <option value="Jakarta Utara">Jakarta Utara</option>
+                                        <option value="Jakarta Pusat">Jakarta Pusat</option>
+                                        <option value="Kepulauan Seribu Utara">Kepulauan Seribu Utara</option>
+                                        <option value="Kepulauan Seribu Selatan">Kepulauan Seribu Selatan</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="contact_person" class="form-label">Contact Person *</label>
+                                        <input type="text" class="form-control" id="contact_person" name="contact_person" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="telepon" class="form-label">Telepon</label>
+                                        <input type="tel" class="form-control" id="telepon" name="telepon">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           placeholder="contact@company.com">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Administrasi -->
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>Data Administrasi</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="nomor_surat" class="form-label">Nomor Surat</label>
+                                    <input type="text" class="form-control" id="nomor_surat" name="nomor_surat"
+                                           placeholder="SRT-001/2024">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="tanggal_permohonan" class="form-label">Tanggal Permohonan *</label>
+                                    <input type="date" class="form-control" id="tanggal_permohonan" name="tanggal_permohonan" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="nomor_surat_tugas" class="form-label">Nomor Surat Tugas</label>
+                                    <input type="text" class="form-control" id="nomor_surat_tugas" name="nomor_surat_tugas"
+                                           placeholder="ST-001/2024">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="tanggal_surat_tugas" class="form-label">Tanggal Surat Tugas</label>
+                                    <input type="date" class="form-control" id="tanggal_surat_tugas" name="tanggal_surat_tugas">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="nomor_rekomtek" class="form-label">Nomor Rekomtek</label>
+                                    <input type="text" class="form-control" id="nomor_rekomtek" name="nomor_rekomtek"
+                                           placeholder="RT-001/2024">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="tanggal_rekomtek" class="form-label">Tanggal Rekomtek</label>
+                                    <input type="date" class="form-control" id="tanggal_rekomtek" name="tanggal_rekomtek">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="periode_tahun_sertifikasi" class="form-label">Periode Tahun Sertifikasi</label>
+                                <input type="number" class="form-control" id="periode_tahun_sertifikasi" name="periode_tahun_sertifikasi" 
+                                       value="{{ datetime.now().year }}" min="2024" max="2030">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Produk & Kunjungan -->
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-fish me-2"></i>Data Produk</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="jenis_sertifikat" class="form-label fw-semibold">Jenis Sertifikat *</label>
+                                <select class="form-control" id="jenis_sertifikat" name="jenis_sertifikat" required>
+                                    <option value="">Pilih Jenis Sertifikat</option>
+                                    <option value="SKP">SKP - Sertifikat Kelayakan Pengolahan (Export)</option>
+                                    <option value="GMP">GMP - Good Manufacturing Practice</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="jenis_produk" class="form-label fw-semibold">Jenis Produk *</label>
+                                <select class="form-control" id="jenis_produk" name="jenis_produk" required>
+                                    <option value="">Pilih Jenis Produk</option>
+                                    <option value="Ikan Segar">Ikan Segar</option>
+                                    <option value="Ikan Frozen">Ikan Frozen/Beku</option>
+                                    <option value="Ikan Olahan">Ikan Olahan</option>
+                                    <option value="Ikan Kaleng">Ikan Kaleng</option>
+                                    <option value="Udang Segar">Udang Segar</option>
+                                    <option value="Udang Frozen">Udang Frozen</option>
+                                    <option value="Udang Olahan">Udang Olahan</option>
+                                    <option value="Produk Olahan Lain">Produk Olahan Lainnya</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="nama_produk" class="form-label">Nama Produk Spesifik</label>
+                                <input type="text" class="form-control" id="nama_produk" name="nama_produk"
+                                       placeholder="Contoh: Frozen Tuna Loin, Abon Ikan Tuna">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="spesifikasi_produk" class="form-label">Spesifikasi Produk</label>
+                                <textarea class="form-control" id="spesifikasi_produk" name="spesifikasi_produk" rows="3"
+                                          placeholder="Deskripsi detail produk, ukuran, kemasan, dll"></textarea>
+                            </div>
+                            
+                            <div class="mb-3" id="tujuan_export_section" style="display: none;">
+                                <label for="tujuan_export" class="form-label">Negara Tujuan Export</label>
+                                <input type="text" class="form-control" id="tujuan_export" name="tujuan_export"
+                                       placeholder="Contoh: Jepang, Amerika Serikat">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Kunjungan -->
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Data Kunjungan & Audit</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="anggota_kunjungan" class="form-label">Anggota Kunjungan</label>
+                                <textarea class="form-control" id="anggota_kunjungan" name="anggota_kunjungan" rows="2"
+                                          placeholder="Pisahkan dengan koma. Contoh: Auditor Senior, Inspektur Mutu, Teknisi Lab"></textarea>
+                                <small class="text-muted">Daftar anggota tim yang akan melakukan kunjungan audit</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="tanggal_kunjungan" class="form-label">Tanggal Kunjungan</label>
+                                <input type="date" class="form-control" id="tanggal_kunjungan" name="tanggal_kunjungan">
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="biaya_sertifikasi" class="form-label">Biaya Sertifikasi (Rp)</label>
+                                    <input type="number" class="form-control" id="biaya_sertifikasi" name="biaya_sertifikasi"
+                                           placeholder="2500000">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="biaya_audit" class="form-label">Biaya Audit (Rp)</label>
+                                    <input type="number" class="form-control" id="biaya_audit" name="biaya_audit"
+                                           placeholder="1500000">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info Sertifikat -->
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informasi Sertifikat</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <h6 class="fw-bold">
+                                    <i class="fas fa-certificate me-2"></i>SKP - Sertifikat Kelayakan Pengolahan
+                                </h6>
+                                <ul class="small mb-0">
+                                    <li>Untuk produk perikanan yang akan diekspor</li>
+                                    <li>Memastikan standar keamanan pangan internasional</li>
+                                    <li>Wajib untuk export ke negara tertentu</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="alert alert-success">
+                                <h6 class="fw-bold">
+                                    <i class="fas fa-industry me-2"></i>GMP - Good Manufacturing Practice
+                                </h6>
+                                <ul class="small mb-0">
+                                    <li>Sertifikat untuk proses produksi yang baik</li>
+                                    <li>Standar higienis dan sanitasi produksi</li>
+                                    <li>Untuk pasar domestik dan export</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-custom shadow">
+                        <div class="card-body text-center py-4">
+                            <p class="text-muted mb-4">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Pastikan semua data sudah benar. Nomor permohonan akan digenerate otomatis.
+                            </p>
+                            <button type="submit" class="btn btn-custom btn-lg px-5">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Ajukan Permohonan Sertifikasi
+                            </button>
+                            <a href="{{ url_for('dashboard_pdspkp') }}" class="btn btn-outline-secondary btn-lg px-5 ms-3">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Kembali ke Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show/hide tujuan export based on jenis sertifikat
+            const jenisSertifikat = document.getElementById('jenis_sertifikat');
+            const tujuanExportSection = document.getElementById('tujuan_export_section');
+            
+            jenisSertifikat.addEventListener('change', function() {
+                if (this.value === 'SKP') {
+                    tujuanExportSection.style.display = 'block';
+                } else {
+                    tujuanExportSection.style.display = 'none';
+                }
+            });
+            
+            // Auto set tanggal permohonan ke hari ini
+            document.getElementById('tanggal_permohonan').valueAsDate = new Date();
+            
+            // Calculate total biaya
+            const biayaSertifikasi = document.getElementById('biaya_sertifikasi');
+            const biayaAudit = document.getElementById('biaya_audit');
+            
+            function calculateTotal() {
+                const sertifikasi = parseFloat(biayaSertifikasi.value) || 0;
+                const audit = parseFloat(biayaAudit.value) || 0;
+                const total = sertifikasi + audit;
+                
+                if (total > 0) {
+                    console.log(`Total biaya: Rp ${total.toLocaleString('id-ID')}`);
+                }
+            }
+            
+            [biayaSertifikasi, biayaAudit].forEach(input => {
+                input.addEventListener('input', calculateTotal);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Monitoring Mutu - PDSPKP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        .form-section {
+            border-left: 4px solid #e67e22;
+            padding-left: 20px;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('welcome') }}">
+                <i class="fas fa-fish me-2 text-primary"></i>
+                Fisheries System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    {{ session.username }} (PDSPKP)
+                </span>
+                <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('dashboard_pdspkp') }}">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow-lg mb-4">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-clipboard-list fa-3x text-warning mb-3"></i>
+                        <h2 class="fw-bold mb-2">Laporan Monitoring Mutu</h2>
+                        <p class="text-muted mb-0">Monitoring mutu produk perikanan di pasar, mall, dan modern market</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Monitoring -->
+        <form method="POST">
+            <div class="row">
+                <!-- Data Lokasi -->
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Data Lokasi Monitoring</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-section">
+                                <div class="mb-3">
+                                    <label for="nama_lokasi" class="form-label fw-semibold">Nama Lokasi *</label>
+                                    <input type="text" class="form-control" id="nama_lokasi" name="nama_lokasi" required
+                                           placeholder="Contoh: Pasar Ikan Modern Muara Karang">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="alamat_lokasi" class="form-label">Alamat Lokasi</label>
+                                    <textarea class="form-control" id="alamat_lokasi" name="alamat_lokasi" rows="2"
+                                              placeholder="Alamat lengkap lokasi monitoring"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="wilayah_dki" class="form-label fw-semibold">Wilayah DKI Jakarta *</label>
+                                    <select class="form-control" id="wilayah_dki" name="wilayah_dki" required>
+                                        <option value="">Pilih Wilayah DKI</option>
+                                        <option value="Jakarta Timur">Jakarta Timur</option>
+                                        <option value="Jakarta Barat">Jakarta Barat</option>
+                                        <option value="Jakarta Selatan">Jakarta Selatan</option>
+                                        <option value="Jakarta Utara">Jakarta Utara</option>
+                                        <option value="Jakarta Pusat">Jakarta Pusat</option>
+                                        <option value="Kepulauan Seribu Utara">Kepulauan Seribu Utara</option>
+                                        <option value="Kepulauan Seribu Selatan">Kepulauan Seribu Selatan</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="jenis_lokasi" class="form-label fw-semibold">Jenis Lokasi *</label>
+                                        <select class="form-control" id="jenis_lokasi" name="jenis_lokasi" required>
+                                            <option value="">Pilih Jenis Lokasi</option>
+                                            <option value="pasar tradisional">Pasar Tradisional</option>
+                                            <option value="pasar modern">Pasar Modern</option>
+                                            <option value="mall">Mall/Shopping Center</option>
+                                            <option value="supermarket">Supermarket</option>
+                                            <option value="hypermarket">Hypermarket</option>
+                                            <option value="minimarket">Minimarket</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="kategori_pengolah" class="form-label fw-semibold">Kategori Pengolah *</label>
+                                        <select class="form-control" id="kategori_pengolah" name="kategori_pengolah" required>
+                                            <option value="">Pilih Kategori</option>
+                                            <option value="retail">Retail</option>
+                                            <option value="grosir">Grosir</option>
+                                            <option value="pengolah">Pengolah</option>
+                                            <option value="distributor">Distributor</option>
+                                            <option value="eksportir">Eksportir</option>
+                                            <option value="importir">Importir</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="periode_bulan" class="form-label">Periode Bulan</label>
+                                        <select class="form-control" id="periode_bulan" name="periode_bulan">
+                                            <option value="1">Januari</option>
+                                            <option value="2">Februari</option>
+                                            <option value="3" selected>Maret</option>
+                                            <option value="4">April</option>
+                                            <option value="5">Mei</option>
+                                            <option value="6">Juni</option>
+                                            <option value="7">Juli</option>
+                                            <option value="8">Agustus</option>
+                                            <option value="9">September</option>
+                                            <option value="10">Oktober</option>
+                                            <option value="11">November</option>
+                                            <option value="12">Desember</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="periode_tahun" class="form-label">Periode Tahun</label>
+                                        <input type="number" class="form-control" id="periode_tahun" name="periode_tahun" 
+                                               value="2024" min="2024" max="2030">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="tanggal_monitoring" class="form-label">Tanggal Monitoring *</label>
+                                        <input type="date" class="form-control" id="tanggal_monitoring" name="tanggal_monitoring" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Monitoring -->
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Data Monitoring</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="jumlah_outlet" class="form-label">Jumlah Outlet/Toko</label>
+                                    <input type="number" class="form-control" id="jumlah_outlet" name="jumlah_outlet" min="1">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="jumlah_sampel" class="form-label">Jumlah Sampel Produk</label>
+                                    <input type="number" class="form-control" id="jumlah_sampel" name="jumlah_sampel" min="1">
+                                </div>
+                            </div>
+                            
+                            <h6 class="fw-bold text-success mb-3">Temuan Monitoring</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_aman" class="form-label">Produk Aman</label>
+                                    <input type="number" class="form-control" id="produk_aman" name="produk_aman" min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_tidak_aman" class="form-label">Produk Tidak Aman</label>
+                                    <input type="number" class="form-control" id="produk_tidak_aman" name="produk_tidak_aman" min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_kadaluwarsa" class="form-label">Produk Kadaluwarsa</label>
+                                    <input type="number" class="form-control" id="produk_kadaluwarsa" name="produk_kadaluwarsa" min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_tanpa_label" class="form-label">Produk Tanpa Label</label>
+                                    <input type="number" class="form-control" id="produk_tanpa_label" name="produk_tanpa_label" min="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jenis Produk -->
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-fish me-2"></i>Breakdown Jenis Produk</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_ikan_segar" class="form-label">Ikan Segar</label>
+                                    <input type="number" class="form-control" id="produk_ikan_segar" name="produk_ikan_segar" min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_ikan_olahan" class="form-label">Ikan Olahan</label>
+                                    <input type="number" class="form-control" id="produk_ikan_olahan" name="produk_ikan_olahan" min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_ikan_frozen" class="form-label">Ikan Frozen</label>
+                                    <input type="number" class="form-control" id="produk_ikan_frozen" name="produk_ikan_frozen" min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_ikan_kaleng" class="form-label">Ikan Kaleng</label>
+                                    <input type="number" class="form-control" id="produk_ikan_kaleng" name="produk_ikan_kaleng" min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_udang" class="form-label">Produk Udang</label>
+                                    <input type="number" class="form-control" id="produk_udang" name="produk_udang" min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_lainnya" class="form-label">Produk Lainnya</label>
+                                    <input type="number" class="form-control" id="produk_lainnya" name="produk_lainnya" min="0">
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <h6 class="fw-bold text-info mb-3">Asal Produk (untuk analisis import/export)</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_lokal" class="form-label">Produk Lokal</label>
+                                    <input type="number" class="form-control" id="produk_lokal" name="produk_lokal" min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="produk_import" class="form-label">Produk Import</label>
+                                    <input type="number" class="form-control" id="produk_import" name="produk_import" min="0">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="negara_asal_import" class="form-label">Negara Asal Import</label>
+                                <input type="text" class="form-control" id="negara_asal_import" name="negara_asal_import"
+                                       placeholder="Pisahkan dengan koma. Contoh: Thailand, Vietnam, China">
+                                <small class="text-muted">Untuk analisis tren import produk perikanan</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skor & Tindakan -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-star me-2"></i>Skor Penilaian</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="tingkat_kepatuhan" class="form-label">Tingkat Kepatuhan (%)</label>
+                                    <input type="number" step="0.1" class="form-control" id="tingkat_kepatuhan" name="tingkat_kepatuhan" 
+                                           min="0" max="100" placeholder="90.5">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="skor_higienitas" class="form-label">Skor Higienitas</label>
+                                    <input type="number" step="0.1" class="form-control" id="skor_higienitas" name="skor_higienitas" 
+                                           min="0" max="100" placeholder="85.0">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="skor_pelabelan" class="form-label">Skor Pelabelan</label>
+                                    <input type="number" step="0.1" class="form-control" id="skor_pelabelan" name="skor_pelabelan" 
+                                           min="0" max="100" placeholder="88.0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Tindakan & Sanksi</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="tindakan_diambil" class="form-label">Tindakan yang Diambil</label>
+                                <textarea class="form-control" id="tindakan_diambil" name="tindakan_diambil" rows="3"
+                                          placeholder="Deskripsi tindakan korektif yang dilakukan"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="sanksi_diberikan" class="form-label">Sanksi yang Diberikan</label>
+                                <textarea class="form-control" id="sanksi_diberikan" name="sanksi_diberikan" rows="2"
+                                          placeholder="Sanksi administratif atau denda yang diberikan"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-custom shadow">
+                        <div class="card-body text-center py-4">
+                            <p class="text-muted mb-4">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Data monitoring ini akan digunakan untuk analisis tren mutu produk perikanan dan grafik import/export.
+                            </p>
+                            <button type="submit" class="btn btn-custom btn-lg px-5">
+                                <i class="fas fa-save me-2"></i>
+                                Simpan Laporan Monitoring
+                            </button>
+                            <a href="{{ url_for('dashboard_pdspkp') }}" class="btn btn-outline-secondary btn-lg px-5 ms-3">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Kembali ke Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto set tanggal monitoring ke hari ini
+            document.getElementById('tanggal_monitoring').valueAsDate = new Date();
+            
+            // Auto calculate kepatuhan percentage
+            const produkAman = document.getElementById('produk_aman');
+            const produkTidakAman = document.getElementById('produk_tidak_aman');
+            const jumlahSampel = document.getElementById('jumlah_sampel');
+            const tingkatKepatuhan = document.getElementById('tingkat_kepatuhan');
+            
+            function calculateKepatuhan() {
+                const aman = parseInt(produkAman.value) || 0;
+                const tidakAman = parseInt(produkTidakAman.value) || 0;
+                const total = parseInt(jumlahSampel.value) || 0;
+                
+                if (total > 0) {
+                    const kepatuhan = (aman / total) * 100;
+                    tingkatKepatuhan.value = kepatuhan.toFixed(1);
+                }
+            }
+            
+            [produkAman, produkTidakAman, jumlahSampel].forEach(input => {
+                input.addEventListener('input', calculateKepatuhan);
+            });
+            
+            // Validate total produk tidak melebihi sampel
+            function validateTotal() {
+                const total = parseInt(jumlahSampel.value) || 0;
+                const aman = parseInt(produkAman.value) || 0;
+                const tidakAman = parseInt(produkTidakAman.value) || 0;
+                const kadaluwarsa = parseInt(document.getElementById('produk_kadaluwarsa').value) || 0;
+                const tanpaLabel = parseInt(document.getElementById('produk_tanpa_label').value) || 0;
+                
+                const sum = aman + tidakAman + kadaluwarsa + tanpaLabel;
+                
+                if (sum > total && total > 0) {
+                    alert('Peringatan: Total temuan melebihi jumlah sampel!');
+                }
+            }
+            
+            // Add validation to relevant fields
+            ['produk_aman', 'produk_tidak_aman', 'produk_kadaluwarsa', 'produk_tanpa_label'].forEach(id => {
+                document.getElementById(id).addEventListener('change', validateTotal);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{
+  "dhika": {
+    "user_id": 2,
+    "face_file": "dhika_20250915_102048.jpg",
+    "enrolled_at": "2025-09-15T10:20:48.372700",
+    "user_info": {
+      "role": "admin",
+      "full_name": "Dhika Admin"
+    }
+  },
+  "natalia_budidaya": {
+    "user_id": 1,
+    "face_file": "natalia_budidaya_20250915_102715.jpg",
+    "enrolled_at": "2025-09-15T10:27:15.199911",
+    "user_info": {
+      "role": "budidaya",
+      "full_name": "Natalia Budidaya"
+    }
+  },
+  "dewi_pds": {
+    "user_id": 2,
+    "face_file": "dewi_pds_20250915_103640.jpg",
+    "enrolled_at": "2025-09-15T10:36:40.118503",
+    "user_info": {
+      "role": "pdspkp",
+      "full_name": "Dewi PDSPKP"
+    }
+  },
+  "reza_tangkap": {
+    "user_id": 3,
+    "face_file": "reza_tangkap_20250915_113656.jpg",
+    "enrolled_at": "2025-09-15T11:36:56.345000",
+    "user_info": {
+      "role": "tangkap",
+      "full_name": "Reza Tangkap"
+    }
+  },
+  "natalie": {
+    "user_id": 4,
+    "face_file": "natalie_20250915_132915.jpg",
+    "enrolled_at": "2025-09-15T13:29:15.561845",
+    "user_info": {
+      "role": "budidaya",
+      "full_name": "Natalie Budidaya"
+    }
+  },
+  "fauzi": {
+    "user_id": 5,
+    "face_file": "fauzi_20250915_154136.jpg",
+    "enrolled_at": "2025-09-15T15:41:36.062368",
+    "user_info": {
+      "role": "tangkap",
+      "full_name": "Fauzi Tangkap"
+    }
+  },
+  "admin": {
+    "user_id": 6,
+    "face_file": "admin_20250915_154341.jpg",
+    "enrolled_at": "2025-09-15T15:43:41.128772",
+    "user_info": {
+      "role": "admin",
+      "full_name": "System Administrator"
+    }
+  },
+  "dhilla": {
+    "user_id": 7,
+    "face_file": "dhilla_20250915_154521.jpg",
+    "enrolled_at": "2025-09-15T15:45:21.208655",
+    "user_info": {
+      "role": "pdspkp",
+      "full_name": "Dhilla PDSPKP"
+    }
+  },
+  "elis": {
+    "user_id": 8,
+    "face_file": "elis_20250916_090710.jpg",
+    "enrolled_at": "2025-09-16T09:07:10.423156",
+    "user_info": {
+      "role": "pdspkp",
+      "full_name": "Elis PDSPKP"
+    }
+  }
+}

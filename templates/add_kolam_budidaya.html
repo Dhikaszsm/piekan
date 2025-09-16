@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Kolam Budidaya - Fisheries System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        .form-section {
+            border-left: 4px solid #28a745;
+            padding-left: 20px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('welcome') }}">
+                <i class="fas fa-fish me-2 text-primary"></i>
+                Fisheries System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    {{ session.username }} (Budidaya)
+                </span>
+                <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('dashboard_budidaya') }}">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow-lg mb-4">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-swimming-pool fa-3x text-success mb-3"></i>
+                        <h2 class="fw-bold mb-2">Tambah Kolam Budidaya</h2>
+                        <p class="text-muted mb-0">Daftarkan kolam budidaya baru untuk monitoring dan produksi</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Form Tambah Kolam -->
+        <form method="POST">
+            <div class="row">
+                <!-- Data Kolam -->
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-swimming-pool me-2"></i>Informasi Kolam</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-section">
+                                <div class="mb-3">
+                                    <label for="nomor_kolam" class="form-label fw-semibold">Nomor Kolam *</label>
+                                    <input type="text" class="form-control" id="nomor_kolam" name="nomor_kolam" required
+                                           placeholder="Contoh: BD-01, Kolam-A1">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="jenis_kolam" class="form-label fw-semibold">Jenis Kolam *</label>
+                                    <select class="form-control" id="jenis_kolam" name="jenis_kolam" required>
+                                        <option value="">Pilih Jenis Kolam</option>
+                                        <option value="terpal">Kolam Terpal</option>
+                                        <option value="tanah">Kolam Tanah</option>
+                                        <option value="beton">Kolam Beton</option>
+                                        <option value="keramba">Keramba Apung</option>
+                                        <option value="tambak">Tambak</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h6 class="text-success mb-3"><i class="fas fa-ruler me-2"></i>Dimensi Kolam</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="ukuran_panjang" class="form-label">Panjang (meter)</label>
+                                        <input type="number" step="0.1" class="form-control" id="ukuran_panjang" name="ukuran_panjang">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="ukuran_lebar" class="form-label">Lebar (meter)</label>
+                                        <input type="number" step="0.1" class="form-control" id="ukuran_lebar" name="ukuran_lebar">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="kedalaman" class="form-label">Kedalaman (meter)</label>
+                                        <input type="number" step="0.1" class="form-control" id="kedalaman" name="kedalaman">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="volume_air" class="form-label">Volume Air (m³)</label>
+                                        <input type="number" step="0.1" class="form-control" id="volume_air" name="volume_air">
+                                        <small class="text-muted">Akan dihitung otomatis jika kosong</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Budidaya -->
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-fish me-2"></i>Data Budidaya</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="jenis_ikan" class="form-label fw-semibold">Jenis Ikan *</label>
+                                <select class="form-control" id="jenis_ikan" name="jenis_ikan" required>
+                                    <option value="">Pilih Jenis Ikan</option>
+                                    <option value="Lele">Ikan Lele</option>
+                                    <option value="Nila">Ikan Nila</option>
+                                    <option value="Mas">Ikan Mas</option>
+                                    <option value="Gurame">Ikan Gurame</option>
+                                    <option value="Patin">Ikan Patin</option>
+                                    <option value="Udang Vaname">Udang Vaname</option>
+                                    <option value="Udang Windu">Udang Windu</option>
+                                    <option value="Bandeng">Ikan Bandeng</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="jumlah_tebar" class="form-label fw-semibold">Jumlah Tebar (ekor)</label>
+                                <input type="number" class="form-control" id="jumlah_tebar" name="jumlah_tebar"
+                                       placeholder="Contoh: 5000">
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="tanggal_tebar" class="form-label">Tanggal Tebar</label>
+                                    <input type="date" class="form-control" id="tanggal_tebar" name="tanggal_tebar">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="target_panen" class="form-label">Target Panen</label>
+                                    <input type="date" class="form-control" id="target_panen" name="target_panen">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="siklus_ke" class="form-label">Siklus Ke-</label>
+                                <input type="number" class="form-control" id="siklus_ke" name="siklus_ke" value="1" min="1">
+                                <small class="text-muted">Siklus budidaya ke berapa di kolam ini</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tips Budidaya -->
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Tips Budidaya</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6 class="fw-bold text-success"><i class="fas fa-check me-2"></i>Persiapan Kolam:</h6>
+                                <ul class="small">
+                                    <li>Keringkan dan bersihkan kolam</li>
+                                    <li>Berikan kapur untuk sterilisasi</li>
+                                    <li>Isi air dan diamkan 3-7 hari</li>
+                                    <li>Cek kualitas air sebelum tebar</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h6 class="fw-bold text-info"><i class="fas fa-info me-2"></i>Densitas Optimal:</h6>
+                                <ul class="small">
+                                    <li>Lele: 100-150 ekor/m³</li>
+                                    <li>Nila: 10-20 ekor/m²</li>
+                                    <li>Mas: 5-10 ekor/m²</li>
+                                    <li>Udang: 30-50 ekor/m²</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-chart-line me-2"></i>
+                                <strong>Monitoring:</strong> Lakukan monitoring harian untuk pH, suhu, dan pemberian pakan.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-custom shadow">
+                        <div class="card-body text-center py-4">
+                            <p class="text-muted mb-4">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Data kolam akan disimpan dan dapat dimonitor melalui dashboard budidaya.
+                            </p>
+                            <button type="submit" class="btn btn-custom btn-lg px-5">
+                                <i class="fas fa-save me-2"></i>
+                                Simpan Kolam Budidaya
+                            </button>
+                            <a href="{{ url_for('dashboard_budidaya') }}" class="btn btn-outline-secondary btn-lg px-5 ms-3">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Kembali ke Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto calculate volume
+        document.addEventListener('DOMContentLoaded', function() {
+            const panjang = document.getElementById('ukuran_panjang');
+            const lebar = document.getElementById('ukuran_lebar');
+            const kedalaman = document.getElementById('kedalaman');
+            const volume = document.getElementById('volume_air');
+            
+            function calculateVolume() {
+                if (panjang.value && lebar.value && kedalaman.value && !volume.value) {
+                    const calc = parseFloat(panjang.value) * parseFloat(lebar.value) * parseFloat(kedalaman.value);
+                    volume.value = calc.toFixed(1);
+                }
+            }
+            
+            [panjang, lebar, kedalaman].forEach(input => {
+                input.addEventListener('input', calculateVolume);
+            });
+            
+            // Auto set target panen (3 months for most fish)
+            document.getElementById('tanggal_tebar').addEventListener('change', function() {
+                const targetPanen = document.getElementById('target_panen');
+                if (this.value && !targetPanen.value) {
+                    const tebarDate = new Date(this.value);
+                    const jenis = document.getElementById('jenis_ikan').value;
+                    
+                    // Set target based on fish type
+                    let months = 3; // default
+                    if (jenis === 'Lele') months = 3;
+                    else if (jenis === 'Nila') months = 6;
+                    else if (jenis === 'Mas') months = 8;
+                    else if (jenis === 'Gurame') months = 12;
+                    else if (jenis.includes('Udang')) months = 4;
+                    
+                    tebarDate.setMonth(tebarDate.getMonth() + months);
+                    targetPanen.value = tebarDate.toISOString().split('T')[0];
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permintaan Benih Ikan DO - Budidaya</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        .form-section {
+            border-left: 4px solid #28a745;
+            padding-left: 20px;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('welcome') }}">
+                <i class="fas fa-fish me-2 text-primary"></i>
+                Fisheries System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    {{ session.username }} (Budidaya)
+                </span>
+                <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('dashboard_budidaya') }}">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow-lg mb-4">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-seedling fa-3x text-success mb-3"></i>
+                        <h2 class="fw-bold mb-2">Permintaan Benih Ikan DO</h2>
+                        <p class="text-muted mb-0">Form permintaan distribusi benih ikan (Dropped Out) - Nila, Lele, Mas, Gurame</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Form Permintaan -->
+        <form method="POST">
+            <div class="row">
+                <!-- Data Pemohon -->
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-user me-2"></i>Data Pemohon</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-section">
+                                <div class="mb-3">
+                                    <label for="nama_pemohon" class="form-label fw-semibold">Nama Pemohon *</label>
+                                    <input type="text" class="form-control" id="nama_pemohon" name="nama_pemohon" required
+                                           placeholder="Nama lengkap pemohon">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="alamat_pemohon" class="form-label fw-semibold">Alamat Lengkap *</label>
+                                    <textarea class="form-control" id="alamat_pemohon" name="alamat_pemohon" rows="3" required
+                                              placeholder="Alamat lengkap pemohon"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="wilayah_dki" class="form-label fw-semibold">Wilayah DKI Jakarta *</label>
+                                    <select class="form-control" id="wilayah_dki" name="wilayah_dki" required>
+                                        <option value="">Pilih Wilayah DKI</option>
+                                        <option value="Jakarta Timur">Jakarta Timur</option>
+                                        <option value="Jakarta Barat">Jakarta Barat</option>
+                                        <option value="Jakarta Selatan">Jakarta Selatan</option>
+                                        <option value="Jakarta Utara">Jakarta Utara</option>
+                                        <option value="Jakarta Pusat">Jakarta Pusat</option>
+                                        <option value="Kepulauan Seribu Utara">Kepulauan Seribu Utara</option>
+                                        <option value="Kepulauan Seribu Selatan">Kepulauan Seribu Selatan</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="telepon_pemohon" class="form-label">Telepon/HP</label>
+                                        <input type="tel" class="form-control" id="telepon_pemohon" name="telepon_pemohon">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email_pemohon" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email_pemohon" name="email_pemohon">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="jenis_usaha" class="form-label fw-semibold">Jenis Usaha *</label>
+                                    <select class="form-control" id="jenis_usaha" name="jenis_usaha" required>
+                                        <option value="">Pilih Jenis Usaha</option>
+                                        <option value="individu">Individu/Perorangan</option>
+                                        <option value="kelompok">Kelompok Tani/Pembudidaya</option>
+                                        <option value="koperasi">Koperasi</option>
+                                        <option value="perusahaan">Perusahaan/CV/PT</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="tanggal_permintaan" class="form-label">Tanggal Permintaan *</label>
+                                    <input type="date" class="form-control" id="tanggal_permintaan" name="tanggal_permintaan" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Benih & Kolam -->
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-fish me-2"></i>Data Benih yang Diminta</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="jenis_ikan" class="form-label fw-semibold">Jenis Ikan *</label>
+                                <select class="form-control" id="jenis_ikan" name="jenis_ikan" required>
+                                    <option value="">Pilih Jenis Ikan</option>
+                                    <option value="Nila">Ikan Nila</option>
+                                    <option value="Lele">Ikan Lele</option>
+                                    <option value="Mas">Ikan Mas</option>
+                                    <option value="Gurame">Ikan Gurame</option>
+                                    <option value="Patin">Ikan Patin</option>
+                                    <option value="Bandeng">Ikan Bandeng</option>
+                                </select>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="ukuran_benih" class="form-label fw-semibold">Ukuran Benih *</label>
+                                    <select class="form-control" id="ukuran_benih" name="ukuran_benih" required>
+                                        <option value="">Pilih Ukuran</option>
+                                        <option value="3-5cm">3-5 cm (Kecil)</option>
+                                        <option value="5-8cm">5-8 cm (Sedang)</option>
+                                        <option value="8-12cm">8-12 cm (Besar)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="tujuan_budidaya" class="form-label">Tujuan Budidaya</label>
+                                    <select class="form-control" id="tujuan_budidaya" name="tujuan_budidaya">
+                                        <option value="konsumsi">Konsumsi</option>
+                                        <option value="pembesaran">Pembesaran</option>
+                                        <option value="indukan">Indukan</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="jumlah_diminta" class="form-label fw-semibold">Jumlah Diminta (ekor) *</label>
+                                    <input type="number" class="form-control" id="jumlah_diminta" name="jumlah_diminta" required
+                                           placeholder="5000" min="100">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="harga_per_ekor" class="form-label">Harga per Ekor (Rp)</label>
+                                    <input type="number" class="form-control" id="harga_per_ekor" name="harga_per_ekor" 
+                                           placeholder="150" readonly>
+                                    <small class="text-muted">Harga akan diset otomatis</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Kolam -->
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-swimming-pool me-2"></i>Data Kolam Budidaya</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="alamat_kolam" class="form-label">Alamat Kolam</label>
+                                <textarea class="form-control" id="alamat_kolam" name="alamat_kolam" rows="2"
+                                          placeholder="Lokasi kolam yang akan digunakan untuk budidaya"></textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="luas_kolam" class="form-label">Luas Kolam (m²)</label>
+                                    <input type="number" step="0.1" class="form-control" id="luas_kolam" name="luas_kolam">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="jenis_kolam" class="form-label">Jenis Kolam</label>
+                                    <select class="form-control" id="jenis_kolam" name="jenis_kolam">
+                                        <option value="">Pilih Jenis Kolam</option>
+                                        <option value="terpal">Kolam Terpal</option>
+                                        <option value="tanah">Kolam Tanah</option>
+                                        <option value="beton">Kolam Beton</option>
+                                        <option value="keramba">Keramba Apung</option>
+                                        <option value="tambak">Tambak</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="sumber_air" class="form-label">Sumber Air</label>
+                                <select class="form-control" id="sumber_air" name="sumber_air">
+                                    <option value="">Pilih Sumber Air</option>
+                                    <option value="sumur">Sumur</option>
+                                    <option value="sungai">Sungai</option>
+                                    <option value="pam">PAM</option>
+                                    <option value="mata air">Mata Air</option>
+                                    <option value="air laut">Air Laut (untuk bandeng)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="catatan_pemohon" class="form-label">Catatan Tambahan</label>
+                                <textarea class="form-control" id="catatan_pemohon" name="catatan_pemohon" rows="3"
+                                          placeholder="Catatan khusus atau kebutuhan spesifik"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Harga & Submit -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card card-custom shadow">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informasi Harga Benih DO</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-3">
+                                    <div class="p-3 bg-light rounded">
+                                        <i class="fas fa-fish fa-2x text-success mb-2"></i>
+                                        <h6 class="fw-bold">Nila</h6>
+                                        <p class="mb-0">Rp 150/ekor</p>
+                                        <small class="text-muted">3-5cm</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 bg-light rounded">
+                                        <i class="fas fa-fish fa-2x text-info mb-2"></i>
+                                        <h6 class="fw-bold">Lele</h6>
+                                        <p class="mb-0">Rp 200/ekor</p>
+                                        <small class="text-muted">5-8cm</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 bg-light rounded">
+                                        <i class="fas fa-fish fa-2x text-warning mb-2"></i>
+                                        <h6 class="fw-bold">Mas</h6>
+                                        <p class="mb-0">Rp 300/ekor</p>
+                                        <small class="text-muted">5-8cm</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 bg-light rounded">
+                                        <i class="fas fa-fish fa-2x text-danger mb-2"></i>
+                                        <h6 class="fw-bold">Gurame</h6>
+                                        <p class="mb-0">Rp 500/ekor</p>
+                                        <small class="text-muted">8-12cm</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Catatan:</strong> Harga dapat berubah sesuai stok dan kualitas benih. Pembayaran dilakukan saat pengambilan benih.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card card-custom shadow">
+                        <div class="card-body text-center py-4">
+                            <h5 class="fw-bold mb-4">Total Estimasi</h5>
+                            <div class="mb-3">
+                                <div class="display-6 fw-bold text-primary" id="total-estimasi">Rp 0</div>
+                                <p class="text-muted">Total Biaya Estimasi</p>
+                            </div>
+                            
+                            <hr>
+                            
+                            <p class="text-muted mb-4">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Permintaan akan diproses dalam 1-3 hari kerja. Status akan diupdate via SMS/WhatsApp.
+                            </p>
+                            
+                            <button type="submit" class="btn btn-custom btn-lg px-4 w-100">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Ajukan Permintaan Benih
+                            </button>
+                            
+                            <a href="{{ url_for('dashboard_budidaya') }}" class="btn btn-outline-secondary w-100 mt-2">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Kembali ke Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto set tanggal permintaan ke hari ini
+            document.getElementById('tanggal_permintaan').valueAsDate = new Date();
+            
+            // Price mapping
+            const hargaBenih = {
+                'Nila': 150,
+                'Lele': 200,
+                'Mas': 300,
+                'Gurame': 500,
+                'Patin': 250,
+                'Bandeng': 100
+            };
+            
+            // Auto set harga berdasarkan jenis ikan
+            const jenisIkan = document.getElementById('jenis_ikan');
+            const hargaPerEkor = document.getElementById('harga_per_ekor');
+            const jumlahDiminta = document.getElementById('jumlah_diminta');
+            const totalEstimasi = document.getElementById('total-estimasi');
+            
+            function updateHarga() {
+                const jenis = jenisIkan.value;
+                if (jenis && hargaBenih[jenis]) {
+                    hargaPerEkor.value = hargaBenih[jenis];
+                    calculateTotal();
+                }
+            }
+            
+            function calculateTotal() {
+                const harga = parseFloat(hargaPerEkor.value) || 0;
+                const jumlah = parseInt(jumlahDiminta.value) || 0;
+                const total = harga * jumlah;
+                
+                if (total > 0) {
+                    totalEstimasi.textContent = `Rp ${total.toLocaleString('id-ID')}`;
+                } else {
+                    totalEstimasi.textContent = 'Rp 0';
+                }
+            }
+            
+            jenisIkan.addEventListener('change', updateHarga);
+            jumlahDiminta.addEventListener('input', calculateTotal);
+            hargaPerEkor.addEventListener('input', calculateTotal);
+            
+            // Validation untuk jumlah minimum
+            jumlahDiminta.addEventListener('change', function() {
+                const jumlah = parseInt(this.value);
+                if (jumlah < 100) {
+                    alert('Jumlah minimum permintaan adalah 100 ekor');
+                    this.value = 100;
+                    calculateTotal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

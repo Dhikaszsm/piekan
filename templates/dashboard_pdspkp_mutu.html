@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard PDSPKP Mutu - Fisheries System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .stat-card {
+            border-left: 4px solid;
+        }
+        .stat-card.success {
+            border-color: #28a745;
+        }
+        .stat-card.info {
+            border-color: #17a2b8;
+        }
+        .stat-card.warning {
+            border-color: #ffc107;
+        }
+        .stat-card.danger {
+            border-color: #dc3545;
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('welcome') }}">
+                <i class="fas fa-fish me-2 text-primary"></i>
+                Fisheries System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    {{ session.username }} (PDSPKP)
+                </span>
+                <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow-lg mb-4">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-certificate fa-3x text-primary mb-3"></i>
+                        <h2 class="fw-bold mb-2">Dashboard PDSPKP</h2>
+                        <p class="text-muted mb-0">Sertifikasi Mutu & Monitoring Produk Perikanan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- 4 Data Penting -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card info">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-file-alt fa-2x text-info"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.total_permintaan }}</h4>
+                                <p class="text-muted mb-0">Total Permintaan</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card success">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-certificate fa-2x text-success"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.sertifikasi_diterbitkan }}</h4>
+                                <p class="text-muted mb-0">Sertifikasi Diterbitkan</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card warning">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-clock fa-2x text-warning"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.dalam_proses }}</h4>
+                                <p class="text-muted mb-0">Dalam Proses</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card danger">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-times-circle fa-2x text-danger"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.ditolak }}</h4>
+                                <p class="text-muted mb-0">Ditolak</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card card-custom shadow">
+                    <div class="card-body text-center py-4">
+                        <h5 class="fw-bold mb-4">Panel Kontrol PDSPKP</h5>
+                        <div class="d-flex flex-wrap justify-content-center gap-3">
+                            <a href="{{ url_for('add_permohonan_sertifikasi') }}" class="btn btn-custom btn-lg">
+                                <i class="fas fa-plus me-2"></i>
+                                Permohonan Baru
+                            </a>
+                            <a href="{{ url_for('add_monitoring_mutu') }}" class="btn btn-outline-warning btn-lg">
+                                <i class="fas fa-clipboard-check me-2"></i>
+                                Laporan Monitoring
+                            </a>
+                            <a href="#" class="btn btn-outline-success btn-lg" onclick="showCertificateChart()">
+                                <i class="fas fa-chart-pie me-2"></i>
+                                Chart Sertifikasi
+                            </a>
+                            <a href="#" class="btn btn-outline-info btn-lg" onclick="showPDSPKPAnalytics()">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Analisis Mutu
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Charts -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Analisis Produk Export/Import</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Jenis Sertifikat -->
+                            <div class="col-md-6 mb-4">
+                                <h6 class="fw-bold mb-3">Status Sertifikat SKP & GMP</h6>
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="p-3 bg-light rounded">
+                                            <i class="fas fa-shipping-fast fa-2x text-info mb-2"></i>
+                                            <h4 class="fw-bold text-info">{{ stats.pdspkp.skp_count }}</h4>
+                                            <p class="text-muted mb-0 small">SKP (Export)</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-3 bg-light rounded">
+                                            <i class="fas fa-industry fa-2x text-success mb-2"></i>
+                                            <h4 class="fw-bold text-success">{{ stats.pdspkp.gmp_count }}</h4>
+                                            <p class="text-muted mb-0 small">GMP (Produksi)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Performance -->
+                            <div class="col-md-6 mb-4">
+                                <h6 class="fw-bold mb-3">Performance Metrics</h6>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="small">Approval Rate</span>
+                                        <span class="small">{{ stats.pdspkp.approval_rate }}%</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" style="width: {{ stats.pdspkp.approval_rate }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="small">Avg Score Audit:</span>
+                                    <span class="fw-bold text-primary">{{ stats.pdspkp.avg_score }}/100</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="small">Total Revenue:</span>
+                                    <span class="fw-bold text-success">Rp {{ stats.pdspkp.total_revenue }} juta</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Produk Export Populer -->
+                        <hr>
+                        <h6 class="fw-bold mb-3">Produk Export Populer</h6>
+                        <div class="row">
+                            {% for produk in stats.pdspkp.produk_export_populer[:4] %}
+                            <div class="col-md-3">
+                                <div class="text-center mb-3">
+                                    <i class="fas fa-fish text-primary fa-2x mb-2"></i>
+                                    <p class="mb-0 fw-semibold">{{ produk.produk }}</p>
+                                    <span class="badge bg-primary">{{ produk.jumlah }} permohonan</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-store me-2"></i>Kategori Pengolah</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for kategori in stats.pdspkp.kategori_pengolah_stats[:5] %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-building text-info me-2"></i>
+                                <span class="small">{{ kategori.kategori|title }}</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-info">{{ kategori.jumlah }}</span>
+                                <span class="small text-muted">lokasi</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <hr>
+                        
+                        <h6 class="fw-bold mb-3">Target Bulan Ini</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small">Permohonan Baru:</span>
+                            <span class="fw-bold text-primary">{{ stats.pdspkp.target_bulan_ini.permohonan_baru }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small">Sertifikat Terbit:</span>
+                            <span class="fw-bold text-success">{{ stats.pdspkp.target_bulan_ini.sertifikat_terbit }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small">Monitoring:</span>
+                            <span class="fw-bold text-warning">{{ stats.pdspkp.target_bulan_ini.monitoring }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="small">Target Revenue:</span>
+                            <span class="fw-bold text-info">Rp {{ stats.pdspkp.target_bulan_ini.revenue }} juta</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histori Data Permohonan -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Histori Data Permohonan Sertifikasi</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_permohonan %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>No. Permohonan</th>
+                                        <th>Nama PT</th>
+                                        <th>Jenis Produk</th>
+                                        <th>Sertifikat</th>
+                                        <th>Tanggal</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for permohonan in recent_permohonan %}
+                                    <tr>
+                                        <td><span class="badge bg-dark">{{ permohonan.nomor_permohonan }}</span></td>
+                                        <td class="fw-bold">{{ permohonan.nama_pt }}</td>
+                                        <td>{{ permohonan.jenis_produk }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'info' if permohonan.jenis_sertifikat == 'SKP' else 'success' }}">
+                                                {{ permohonan.jenis_sertifikat }}
+                                            </span>
+                                        </td>
+                                        <td>{{ permohonan.tanggal_permohonan.strftime('%d/%m/%Y') if permohonan.tanggal_permohonan else '-' }}</td>
+                                        <td>
+                                            {% if permohonan.status_permohonan == 'diterbitkan' %}
+                                            <span class="badge bg-success">Diterbitkan</span>
+                                            {% elif permohonan.status_permohonan == 'dalam_proses' %}
+                                            <span class="badge bg-warning">Dalam Proses</span>
+                                            {% elif permohonan.status_permohonan == 'ditolak' %}
+                                            <span class="badge bg-danger">Ditolak</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ permohonan.status_permohonan|title }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="showDetailPermohonan({{ permohonan.id }})">
+                                                <i class="fas fa-eye me-1"></i>Detail
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">Belum ada permohonan sertifikasi</h5>
+                            <p class="text-muted">Mulai dengan membuat permohonan sertifikasi baru</p>
+                            <a href="{{ url_for('add_permohonan_sertifikasi') }}" class="btn btn-custom">
+                                <i class="fas fa-plus me-2"></i>Buat Permohonan Pertama
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showPDSPKPAnalytics() {
+            fetch('/api/pdspkp/analytics')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const p = data.pdspkp;
+                        alert('=== ANALISIS MUTU PDSPKP ===\n\n' +
+                              `📊 OVERVIEW SERTIFIKASI:\n` +
+                              `• Total Permintaan: ${p.total_permintaan}\n` +
+                              `• Sertifikasi Diterbitkan: ${p.sertifikasi_diterbitkan}\n` +
+                              `• Dalam Proses: ${p.dalam_proses}\n` +
+                              `• Ditolak: ${p.ditolak}\n\n` +
+                              
+                              `📈 PERFORMANCE:\n` +
+                              `• Approval Rate: ${p.approval_rate}%\n` +
+                              `• Average Score: ${p.avg_score}/100\n` +
+                              `• Total Revenue: Rp ${p.total_revenue} juta\n\n` +
+                              
+                              `🏭 JENIS SERTIFIKAT:\n` +
+                              `• SKP (Export): ${p.skp_count}\n` +
+                              `• GMP (Produksi): ${p.gmp_count}\n\n` +
+                              
+                              `🐟 PRODUK EXPORT POPULER:\n` +
+                              p.produk_export_populer.map(prod => `• ${prod.produk}: ${prod.jumlah} permohonan`).join('\n'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error mengambil data analisis PDSPKP');
+                });
+        }
+
+        function showCertificateChart() {
+            alert('📊 GRAFIK SERTIFIKASI\n\n' +
+                  `Diterbitkan: {{ stats.sertifikasi_diterbitkan }}\n` +
+                  `Dalam Proses: {{ stats.dalam_proses }}\n` +
+                  `Ditolak: {{ stats.ditolak }}\n\n` +
+                  `Approval Rate: {{ stats.pdspkp.approval_rate }}%\n\n` +
+                  `[Grafik visual akan ditampilkan di sini]`);
+        }
+
+        function showDetailPermohonan(id) {
+            alert(`Detail permohonan ID: ${id}\n\n` +
+                  `Fitur detail permohonan akan menampilkan:\n` +
+                  `- Data lengkap perusahaan\n` +
+                  `- Progress sertifikasi\n` +
+                  `- Hasil audit\n` +
+                  `- Dokumen terkait\n` +
+                  `- Timeline proses`);
+        }
+    </script>
+</body>
+</html>

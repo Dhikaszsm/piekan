@@ -1,2 +1,12 @@
 Flask==2.3.3
 gunicorn==21.2.0
+redis==5.0.1
+python-dotenv==1.0.0
+
+# Face Recognition Libraries (OpenCV)
+opencv-python==4.12.0.88
+numpy==2.2.6
+
+# Database & utilities  
+Flask-SQLAlchemy==3.0.5
+Werkzeug==2.3.7

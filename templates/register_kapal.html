@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrasi Kapal - Fisheries System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        .form-section {
+            border-left: 4px solid #667eea;
+            padding-left: 20px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('welcome') }}">
+                <i class="fas fa-fish me-2 text-primary"></i>
+                Fisheries System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    {{ session.username }} ({{ session.role|title }})
+                </span>
+                <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow-lg mb-4">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-ship fa-3x text-primary mb-3"></i>
+                        <h2 class="fw-bold mb-2">Registrasi Kapal {{ role|title }}</h2>
+                        <p class="text-muted mb-0">Daftarkan kapal Anda untuk mendapatkan izin operasional</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Form Registration -->
+        <form method="POST">
+            <div class="row">
+                <!-- Data Identitas Kapal -->
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-ship me-2"></i>Data Identitas Kapal</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-section">
+                                <div class="mb-3">
+                                    <label for="nama_kapal" class="form-label fw-semibold">Nama Kapal *</label>
+                                    <input type="text" class="form-control" id="nama_kapal" name="nama_kapal" required
+                                           placeholder="Contoh: Sinar Bahari 01">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Jenis Kapal</label>
+                                    <input type="text" class="form-control" value="{{ role|title }}" readonly>
+                                    <small class="text-muted">Otomatis sesuai dengan role Anda</small>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h6 class="text-primary mb-3"><i class="fas fa-ruler me-2"></i>Dimensi Kapal</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="ukuran_gt" class="form-label">Gross Tonnage (GT)</label>
+                                        <input type="number" step="0.1" class="form-control" id="ukuran_gt" name="ukuran_gt">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="ukuran_panjang" class="form-label">Panjang (meter)</label>
+                                        <input type="number" step="0.1" class="form-control" id="ukuran_panjang" name="ukuran_panjang">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="ukuran_lebar" class="form-label">Lebar (meter)</label>
+                                        <input type="number" step="0.1" class="form-control" id="ukuran_lebar" name="ukuran_lebar">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="ukuran_tinggi" class="form-label">Tinggi (meter)</label>
+                                        <input type="number" step="0.1" class="form-control" id="ukuran_tinggi" name="ukuran_tinggi">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Mesin -->
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Data Mesin</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="merk_mesin" class="form-label">Merk Mesin</label>
+                                    <input type="text" class="form-control" id="merk_mesin" name="merk_mesin" 
+                                           placeholder="Contoh: Yanmar, Honda, Suzuki">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="kekuatan_mesin" class="form-label">Kekuatan (HP)</label>
+                                    <input type="number" step="0.1" class="form-control" id="kekuatan_mesin" name="kekuatan_mesin">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="jumlah_mesin" class="form-label">Jumlah Mesin</label>
+                                    <input type="number" class="form-control" id="jumlah_mesin" name="jumlah_mesin" value="1" min="1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Pemilik & Operasional -->
+                <div class="col-lg-6">
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-user me-2"></i>Data Pemilik</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="nama_pemilik" class="form-label fw-semibold">Nama Pemilik *</label>
+                                <input type="text" class="form-control" id="nama_pemilik" name="nama_pemilik" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="nik_pemilik" class="form-label fw-semibold">NIK Pemilik *</label>
+                                <input type="text" class="form-control" id="nik_pemilik" name="nik_pemilik" required
+                                       placeholder="16 digit NIK" maxlength="16">
+                            </div>
+                            <div class="mb-3">
+                                <label for="alamat_pemilik" class="form-label">Alamat Pemilik</label>
+                                <textarea class="form-control" id="alamat_pemilik" name="alamat_pemilik" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="telepon_pemilik" class="form-label">Telepon/HP</label>
+                                <input type="tel" class="form-control" id="telepon_pemilik" name="telepon_pemilik">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-custom shadow mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Data Operasional</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="pelabuhan_pangkalan" class="form-label">Pelabuhan Pangkalan</label>
+                                {% if role == 'tangkap' %}
+                                <select class="form-control" id="pelabuhan_pangkalan" name="pelabuhan_pangkalan">
+                                    <option value="">Pilih Pelabuhan</option>
+                                    <optgroup label="Jakarta">
+                                        <option value="Pelabuhan Muara Angke">Pelabuhan Muara Angke (Jakarta Utara)</option>
+                                        <option value="Pelabuhan Sunda Kelapa">Pelabuhan Sunda Kelapa (Jakarta Utara)</option>
+                                    </optgroup>
+                                    <optgroup label="Kepulauan Seribu">
+                                        <option value="Pelabuhan Pulau Pramuka">Pelabuhan Pulau Pramuka</option>
+                                        <option value="Pelabuhan Pulau Untung Jawa">Pelabuhan Pulau Untung Jawa</option>
+                                        <option value="Pelabuhan Pulau Bidadari">Pelabuhan Pulau Bidadari</option>
+                                        <option value="Pelabuhan Pulau Harapan">Pelabuhan Pulau Harapan</option>
+                                        <option value="Pelabuhan Pulau Kelapa">Pelabuhan Pulau Kelapa</option>
+                                        <option value="Pelabuhan Pulau Panggang">Pelabuhan Pulau Panggang</option>
+                                        <option value="Pelabuhan Marina Ancol">Pelabuhan Marina Ancol</option>
+                                    </optgroup>
+                                </select>
+                                {% else %}
+                                <input type="text" class="form-control" id="pelabuhan_pangkalan" name="pelabuhan_pangkalan"
+                                       placeholder="Contoh: Pelabuhan Muara Angke">
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="daerah_operasi" class="form-label">Daerah Operasi</label>
+                                <input type="text" class="form-control" id="daerah_operasi" name="daerah_operasi"
+                                       placeholder="Contoh: Laut Jawa Utara">
+                            </div>
+                            <div class="mb-3">
+                                <label for="alat_tangkap" class="form-label">Alat Tangkap/Budidaya</label>
+                                <select class="form-control" id="alat_tangkap" name="alat_tangkap">
+                                    {% if role == 'tangkap' %}
+                                    <option value="">Pilih Alat Tangkap</option>
+                                    <option value="Jaring Insang">Jaring Insang</option>
+                                    <option value="Pancing">Pancing</option>
+                                    <option value="Bubu">Bubu</option>
+                                    <option value="Tonda">Tonda</option>
+                                    <option value="Pukat">Pukat</option>
+                                    <option value="Payang">Payang</option>
+                                    <option value="Jaring Trawl">Jaring Trawl</option>
+                                    {% else %}
+                                    <option value="">Pilih Jenis Budidaya</option>
+                                    <option value="Keramba Apung">Keramba Apung</option>
+                                    <option value="Kolam Terpal">Kolam Terpal</option>
+                                    <option value="Kolam Tanah">Kolam Tanah</option>
+                                    <option value="Tambak">Tambak</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Target Ikan/Komoditas</label>
+                                <div class="row">
+                                    {% if role == 'tangkap' %}
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Ikan Tongkol" id="tongkol">
+                                            <label class="form-check-label" for="tongkol">Ikan Tongkol</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Ikan Kembung" id="kembung">
+                                            <label class="form-check-label" for="kembung">Ikan Kembung</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Ikan Tenggiri" id="tenggiri">
+                                            <label class="form-check-label" for="tenggiri">Ikan Tenggiri</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Ikan Tuna" id="tuna">
+                                            <label class="form-check-label" for="tuna">Ikan Tuna</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Udang" id="udang">
+                                            <label class="form-check-label" for="udang">Udang</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Cumi-cumi" id="cumi">
+                                            <label class="form-check-label" for="cumi">Cumi-cumi</label>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Ikan Lele" id="lele">
+                                            <label class="form-check-label" for="lele">Ikan Lele</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Ikan Nila" id="nila">
+                                            <label class="form-check-label" for="nila">Ikan Nila</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Ikan Mas" id="mas">
+                                            <label class="form-check-label" for="mas">Ikan Mas</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Ikan Gurame" id="gurame">
+                                            <label class="form-check-label" for="gurame">Ikan Gurame</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Udang Vaname" id="vaname">
+                                            <label class="form-check-label" for="vaname">Udang Vaname</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="ikan_target" value="Rumput Laut" id="rumput">
+                                            <label class="form-check-label" for="rumput">Rumput Laut</label>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-2">
+                                    <input type="text" class="form-control" name="ikan_target_manual" 
+                                           placeholder="Atau tulis manual (pisahkan dengan koma)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-custom shadow">
+                        <div class="card-body text-center py-4">
+                            <p class="text-muted mb-4">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Pastikan semua data sudah benar sebelum mendaftar. 
+                                Nomor registrasi akan digenerate otomatis.
+                            </p>
+                            <button type="submit" class="btn btn-custom btn-lg px-5">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Daftar Kapal {{ role|title }}
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-lg px-5 ms-3">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Kembali ke Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

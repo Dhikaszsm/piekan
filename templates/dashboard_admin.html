@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Fisheries System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(44, 62, 80, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .stat-card {
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .stat-card.primary { border-color: #3498db; }
+        .stat-card.success { border-color: #27ae60; }
+        .stat-card.warning { border-color: #f39c12; }
+        .stat-card.danger { border-color: #e74c3c; }
+        .btn-admin {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border: none;
+            color: white;
+        }
+        .btn-admin:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        .face-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-white" href="{{ url_for('welcome') }}">
+                <i class="fas fa-fish me-2"></i>
+                Fisheries System - Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-text me-3 text-white">
+                    <i class="fas fa-user-shield me-1"></i>
+                    {{ session.username }} (Administrator)
+                </span>
+                <a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow-lg mb-4">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
+                        <h2 class="fw-bold mb-2">Admin Dashboard</h2>
+                        <p class="text-muted mb-0">Kelola sistem, users, dan face recognition</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card primary">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-users fa-2x text-primary"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.total_users }}</h4>
+                                <p class="text-muted mb-0">Total Users</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card success">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-user-check fa-2x text-success"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.enrolled_faces }}</h4>
+                                <p class="text-muted mb-0">Enrolled Faces</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card warning">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-ship fa-2x text-warning"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.total_kapal }}</h4>
+                                <p class="text-muted mb-0">Total Kapal</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card danger">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-chart-line fa-2x text-danger"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ "%.1f"|format(stats.analytics.total_gt) }}</h4>
+                                <p class="text-muted mb-0">Total GT</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Admin Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <div class="d-grid">
+                                    <button class="btn btn-admin" onclick="refreshFaceSystem()">
+                                        <i class="fas fa-sync me-2"></i>
+                                        Refresh Face System
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="d-grid">
+                                    <button class="btn btn-success" onclick="showSystemStats()">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        System Analytics
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="d-grid">
+                                    <a href="{{ url_for('list_kapal') }}" class="btn btn-info">
+                                        <i class="fas fa-ship me-2"></i>
+                                        Manage Kapal
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="d-grid">
+                                    <button class="btn btn-warning" onclick="downloadBackup()">
+                                        <i class="fas fa-download me-2"></i>
+                                        Backup Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Face Recognition Management -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Enrolled Users - Face Recognition</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if enrolled_users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Full Name</th>
+                                        <th>Role</th>
+                                        <th>Enrolled Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="enrolled-users-table">
+                                    <!-- Will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-user-times fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Belum ada user yang terdaftar</h5>
+                            <p class="text-muted">User dapat melakukan face enrollment setelah login</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Face Recognition Stats</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <div class="row">
+                                <div class="col-6">
+                                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                    <h4 class="fw-bold text-primary">{{ stats.total_users }}</h4>
+                                    <p class="text-muted small">Total Users</p>
+                                </div>
+                                <div class="col-6">
+                                    <i class="fas fa-user-check fa-2x text-success mb-2"></i>
+                                    <h4 class="fw-bold text-success">{{ stats.enrolled_faces }}</h4>
+                                    <p class="text-muted small">With Face Data</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small">Enrollment Rate</span>
+                                {% set enrollment_rate = (stats.enrolled_faces / stats.total_users * 100) if stats.total_users > 0 else 0 %}
+                                <span class="small">{{ "%.0f"|format(enrollment_rate) }}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" style="width: {{ enrollment_rate }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6 class="fw-bold mb-2">System Health</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small">Face Detection</span>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small">Model Training</span>
+                            <span class="badge bg-success">Ready</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small">Camera Access</span>
+                            <span class="badge bg-info">Available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Analytics -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Kapal Analytics Overview</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-2">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-ship fa-2x text-info mb-2"></i>
+                                    <h4 class="fw-bold text-info">{{ stats.analytics.kapal_tangkap }}</h4>
+                                    <p class="text-muted mb-0 small">Kapal Tangkap</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-seedling fa-2x text-success mb-2"></i>
+                                    <h4 class="fw-bold text-success">{{ stats.analytics.kapal_budidaya }}</h4>
+                                    <p class="text-muted mb-0 small">Kapal Budidaya</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-check-circle fa-2x text-primary mb-2"></i>
+                                    <h4 class="fw-bold text-primary">{{ stats.analytics.kapal_aktif }}</h4>
+                                    <p class="text-muted mb-0 small">Kapal Aktif</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-weight-hanging fa-2x text-warning mb-2"></i>
+                                    <h4 class="fw-bold text-warning">{{ "%.1f"|format(stats.analytics.total_gt) }}</h4>
+                                    <p class="text-muted mb-0 small">Total GT</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-calculator fa-2x text-danger mb-2"></i>
+                                    <h4 class="fw-bold text-danger">{{ "%.1f"|format(stats.analytics.rata_rata_gt) }}</h4>
+                                    <p class="text-muted mb-0 small">Rata-rata GT</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-anchor fa-2x text-secondary mb-2"></i>
+                                    <h4 class="fw-bold text-secondary">{{ stats.analytics.pelabuhan_stats|length }}</h4>
+                                    <p class="text-muted mb-0 small">Pelabuhan</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Load enrolled users on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEnrolledUsers();
+        });
+
+        function loadEnrolledUsers() {
+            fetch('/api/face/users')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        populateUsersTable(data.users);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading users:', error);
+                });
+        }
+
+        function populateUsersTable(users) {
+            const tbody = document.getElementById('enrolled-users-table');
+            tbody.innerHTML = '';
+
+            // Demo users data for display
+            const userDetails = {
+                // Budidaya Users
+                'natalie': { full_name: 'Natalie Budidaya', role: 'budidaya' },
+                'putri': { full_name: 'Putri Budidaya', role: 'budidaya' },
+                'manda': { full_name: 'Manda Budidaya', role: 'budidaya' },
+                'besty': { full_name: 'Besty Budidaya', role: 'budidaya' },
+                'ari': { full_name: 'Ari Budidaya', role: 'budidaya' },
+                
+                // Tangkap Users
+                'fauzi': { full_name: 'Fauzi Tangkap', role: 'tangkap' },
+                'salman': { full_name: 'Salman Tangkap', role: 'tangkap' },
+                'fadlan': { full_name: 'Fadlan Tangkap', role: 'tangkap' },
+                'khairinal': { full_name: 'Khairinal Tangkap', role: 'tangkap' },
+                
+                // PDSPKP Users
+                'elis': { full_name: 'Elis PDSPKP', role: 'pdspkp' },
+                'rahayu': { full_name: 'Rahayu PDSPKP', role: 'pdspkp' },
+                'dhilla': { full_name: 'Dhilla PDSPKP', role: 'pdspkp' },
+                'endah': { full_name: 'Endah PDSPKP', role: 'pdspkp' },
+                
+                // Legacy & Admin
+                'user_budidaya': { full_name: 'Ahmad Budidaya', role: 'budidaya' },
+                'user_tangkap': { full_name: 'Budi Tangkap', role: 'tangkap' },
+                'user_pds': { full_name: 'Citra PDSPKP', role: 'pdspkp' },
+                'admin': { full_name: 'System Administrator', role: 'admin' },
+                'dhika': { full_name: 'Dhika Admin', role: 'admin' }
+            };
+
+            users.forEach(username => {
+                const user = userDetails[username] || { full_name: username, role: 'unknown' };
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-user-circle fa-2x text-primary me-2"></i>
+                            <strong>${username}</strong>
+                        </div>
+                    </td>
+                    <td>${user.full_name}</td>
+                    <td><span class="badge bg-${getRoleBadgeColor(user.role)}">${user.role.toUpperCase()}</span></td>
+                    <td><small class="text-muted">Recently</small></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${username}')">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getRoleBadgeColor(role) {
+            switch(role) {
+                case 'budidaya': return 'success';
+                case 'tangkap': return 'info';
+                case 'pdspkp': return 'primary';
+                case 'admin': return 'dark';
+                default: return 'secondary';
+            }
+        }
+
+        function deleteUser(username) {
+            if (confirm(`Are you sure you want to delete face data for ${username}?`)) {
+                fetch(`/api/face/delete/${username}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        loadEnrolledUsers(); // Reload table
+                        location.reload(); // Refresh stats
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting user');
+                });
+            }
+        }
+
+        function refreshFaceSystem() {
+            // Simulate refresh
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                alert('Face Recognition System refreshed successfully!');
+                loadEnrolledUsers();
+            }, 2000);
+        }
+
+        function showSystemStats() {
+            fetch('/api/kapal/analytics')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const analytics = data.analytics;
+                        alert(`System Analytics:\n\n` +
+                              `Total Kapal: ${analytics.total_kapal}\n` +
+                              `Kapal Aktif: ${analytics.kapal_aktif}\n` +
+                              `Kapal Budidaya: ${analytics.kapal_budidaya}\n` +
+                              `Kapal Tangkap: ${analytics.kapal_tangkap}\n` +
+                              `Total GT: ${analytics.total_gt}\n` +
+                              `Enrolled Faces: {{ stats.enrolled_faces }}\n` +
+                              `Total Users: {{ stats.total_users }}`);
+                    }
+                });
+        }
+
+        function downloadBackup() {
+            alert('Backup functionality would download:\n\n' +
+                  '- User data\n' +
+                  '- Kapal registration data\n' +
+                  '- Face recognition data\n' +
+                  '- System logs\n\n' +
+                  'This feature can be implemented based on requirements.');
+        }
+    </script>
+</body>
+</html>

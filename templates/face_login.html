@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Face Recognition Login - Fisheries System{% endblock %}
+
+{% block content %}
+<body class="login-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-lg" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.95);">
+                    <div class="card-header card-header-custom text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-user-circle fa-3x mb-2"></i>
+                        </div>
+                        <h3 class="fw-bold mb-1">Face Recognition Login</h3>
+                        <p class="mb-0 opacity-90">Scan wajah Anda untuk masuk sistem</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Camera Interface -->
+                        <div class="text-center mb-4">
+                            <div class="camera-container position-relative">
+                                <video id="faceVideoPreview" width="400" height="300" autoplay 
+                                       style="border: 3px solid #007bff; border-radius: 12px; background: #f8f9fa;"></video>
+                                
+                                <!-- Overlay untuk guide -->
+                                <div class="face-overlay position-absolute" style="
+                                    top: 50%; left: 50%; transform: translate(-50%, -50%);
+                                    width: 200px; height: 200px;
+                                    border: 3px solid #28a745; border-radius: 50%;
+                                    pointer-events: none; opacity: 0.7;
+                                "></div>
+                                
+                                <!-- Status indicator -->
+                                <div id="scanStatus" class="position-absolute bottom-0 start-0 end-0 p-2 text-center">
+                                    <span class="badge bg-secondary">Camera not started</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="text-center mb-4">
+                            <button id="startFaceCamera" class="btn btn-primary btn-lg me-2">
+                                <i class="fas fa-video me-2"></i>Start Face Scan
+                            </button>
+                            <button id="performRecognition" class="btn btn-success btn-lg" disabled>
+                                <i class="fas fa-search me-2"></i>Recognize Face
+                            </button>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="recognitionResults"></div>
+
+                        <!-- Alternative Login -->
+                        <hr>
+                        <div class="text-center">
+                            <p class="text-muted">Atau login dengan username/password:</p>
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-keyboard me-2"></i>Traditional Login
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions Card -->
+                <div class="text-center mt-4">
+                    <div class="card shadow" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.9);">
+                        <div class="card-body py-3">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-question-circle me-2"></i>Cara Menggunakan
+                            </h6>
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <i class="fas fa-play-circle fa-2x text-primary mb-2"></i>
+                                    <small>1. Start Face Scan</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="fas fa-user-circle fa-2x text-success mb-2"></i>
+                                    <small>2. Position wajah di circle</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="fas fa-check-circle fa-2x text-info mb-2"></i>
+                                    <small>3. Click Recognize Face</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+class FaceLoginSystem {
+    constructor() {
+        this.videoElement = document.getElementById('faceVideoPreview');
+        this.stream = null;
+        this.isScanning = false;
+        this.recognition_interval = null;
+        
+        this.initializeEventListeners();
+    }
+    
+    initializeEventListeners() {
+        document.getElementById('startFaceCamera').addEventListener('click', () => {
+            this.startCamera();
+        });
+        
+        document.getElementById('performRecognition').addEventListener('click', () => {
+            this.performRecognition();
+        });
+    }
+    
+    async startCamera() {
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    facingMode: 'user'
+                }
+            });
+            
+            this.videoElement.srcObject = this.stream;
+            
+            // Update UI
+            document.getElementById('scanStatus').innerHTML = 
+                '<span class="badge bg-success">Camera active - Position your face</span>';
+            document.getElementById('startFaceCamera').disabled = true;
+            document.getElementById('performRecognition').disabled = false;
+            
+        } catch (error) {
+            console.error('Camera error:', error);
+            document.getElementById('scanStatus').innerHTML = 
+                '<span class="badge bg-danger">Camera access denied</span>';
+            alert('Cannot access camera. Please allow camera permission.');
+        }
+    }
+    
+    async performRecognition() {
+        if (!this.stream) return;
+        
+        try {
+            // Show scanning status
+            document.getElementById('scanStatus').innerHTML = 
+                '<span class="badge bg-warning">🔍 Scanning face...</span>';
+            
+            document.getElementById('recognitionResults').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-2" role="status"></div>
+                    <p>Recognizing face...</p>
+                </div>
+            `;
+            
+            // Capture current frame
+            const canvas = document.createElement('canvas');
+            canvas.width = 640;
+            canvas.height = 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(this.videoElement, 0, 0);
+            
+            // Convert ke base64
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            // Send ke Flask backend untuk recognition
+            const response = await fetch('/api/recognize-face', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image_data: imageData
+                })
+            });
+            
+            const result = await response.json();
+            this.displayRecognitionResult(result);
+            
+        } catch (error) {
+            console.error('Recognition error:', error);
+            this.showError('Face recognition failed. Please try again.');
+        }
+    }
+    
+    displayRecognitionResult(result) {
+        let html = '';
+        
+        if (result.success && result.user) {
+            // Successful recognition
+            html = `
+                <div class="alert alert-success">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-check fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-1">Welcome, ${result.user.full_name}!</h5>
+                            <small>Role: ${result.user.role} | Confidence: ${result.confidence}%</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <div class="spinner-border text-success mb-2" role="status"></div>
+                    <p>Redirecting to dashboard...</p>
+                </div>
+            `;
+            
+            // Auto redirect setelah 2 detik
+            setTimeout(() => {
+                window.location.href = '/welcome';
+            }, 2000);
+            
+        } else {
+            // Recognition failed
+            html = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-user-times me-2"></i>
+                    <strong>Face not recognized</strong><br>
+                    ${result.message || 'Please try again or use traditional login.'}
+                </div>
+            `;
+            
+            if (result.suggestions) {
+                html += `<div class="mt-2"><small>💡 ${result.suggestions.join(', ')}</small></div>`;
+            }
+        }
+        
+        document.getElementById('recognitionResults').innerHTML = html;
+        
+        // Reset scan status
+        document.getElementById('scanStatus').innerHTML = 
+            '<span class="badge bg-primary">Ready for next scan</span>';
+    }
+    
+    showError(message) {
+        document.getElementById('recognitionResults').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+            </div>
+        `;
+    }
+}
+
+// Initialize system
+document.addEventListener('DOMContentLoaded', () => {
+    window.faceLogin = new FaceLoginSystem();
+    console.log('Face Login System initialized');
+});
+</script>
+
+<style>
+.camera-container {
+    display: inline-block;
+}
+
+.face-overlay {
+    border: 3px dashed #28a745 !important;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.95); }
+    50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
+    100% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.95); }
+}
+
+.login-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0;
+}
+</style>
+{% endblock %}

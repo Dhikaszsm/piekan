@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Enrollment - Fisheries System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        #video {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            border-radius: 15px;
+            border: 4px solid #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        .enrollment-step {
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+        .enrollment-step.active {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        .face-status {
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1em;
+        }
+        .quality-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('welcome') }}">
+                <i class="fas fa-fish me-2 text-primary"></i>
+                Fisheries System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    {{ session.username }} ({{ session.role|title }})
+                </span>
+                <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow-lg mb-4">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+                        <h2 class="fw-bold mb-2">Face Enrollment</h2>
+                        <p class="text-muted mb-0">Daftarkan wajah Anda untuk login menggunakan Face Recognition</p>
+                        <div class="mt-3">
+                            <span class="badge bg-info fs-6">User: {{ session.full_name or session.username }}</span>
+                            <span class="badge bg-success fs-6 ms-2">Role: {{ session.role|title }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Enrollment Steps -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card card-custom shadow enrollment-step active" id="step1">
+                    <div class="card-body text-center">
+                        <i class="fas fa-camera fa-2x text-primary mb-2"></i>
+                        <h6 class="fw-bold">1. Mulai Kamera</h6>
+                        <p class="small text-muted">Aktifkan kamera untuk pengambilan foto</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-custom shadow enrollment-step" id="step2">
+                    <div class="card-body text-center">
+                        <i class="fas fa-user-circle fa-2x text-success mb-2"></i>
+                        <h6 class="fw-bold">2. Posisikan Wajah</h6>
+                        <p class="small text-muted">Pastikan wajah terlihat jelas dan terpusat</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-custom shadow enrollment-step" id="step3">
+                    <div class="card-body text-center">
+                        <i class="fas fa-check-circle fa-2x text-warning mb-2"></i>
+                        <h6 class="fw-bold">3. Simpan Data</h6>
+                        <p class="small text-muted">Foto akan diproses dan disimpan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enrollment Interface -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card card-custom shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-video me-2"></i>Camera Preview</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div id="camera-off" class="py-5">
+                            <i class="fas fa-video-slash fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">Kamera belum aktif</h5>
+                            <p class="text-muted">Klik tombol "Mulai Kamera" untuk memulai enrollment</p>
+                            <button type="button" class="btn btn-custom btn-lg" onclick="startCamera()">
+                                <i class="fas fa-video me-2"></i>Mulai Kamera
+                            </button>
+                        </div>
+                        
+                        <div id="camera-on" style="display: none;" class="position-relative">
+                            <video id="video" autoplay muted></video>
+                            <canvas id="canvas" style="display: none;"></canvas>
+                            <div class="quality-indicator" id="quality-indicator">
+                                <i class="fas fa-circle text-success"></i> Ready
+                            </div>
+                        </div>
+                        
+                        <div class="face-status mt-3" id="face-status">
+                            <i class="fas fa-info-circle text-muted"></i>
+                            <span class="ms-2">Silakan mulai kamera untuk melanjutkan</span>
+                        </div>
+                        
+                        <div class="mt-3" id="camera-controls" style="display: none;">
+                            <button type="button" class="btn btn-success btn-lg me-2" onclick="captureAndEnroll()">
+                                <i class="fas fa-camera me-2"></i>Ambil Foto & Daftar Wajah
+                            </button>
+                            <button type="button" class="btn btn-warning me-2" onclick="retakePhoto()">
+                                <i class="fas fa-redo me-2"></i>Ambil Ulang
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="stopCamera()">
+                                <i class="fas fa-stop me-2"></i>Stop Kamera
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card card-custom shadow-lg">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Tips Enrollment</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-success"><i class="fas fa-check me-2"></i>Yang Harus Dilakukan:</h6>
+                            <ul class="small">
+                                <li>Posisikan wajah di tengah frame</li>
+                                <li>Pastikan pencahayaan cukup terang</li>
+                                <li>Lepaskan kacamata hitam/topi</li>
+                                <li>Tatap langsung ke kamera</li>
+                                <li>Ekspesi netral/sedikit tersenyum</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-danger"><i class="fas fa-times me-2"></i>Yang Harus Dihindari:</h6>
+                            <ul class="small">
+                                <li>Jangan bergerak terlalu cepat</li>
+                                <li>Hindari pencahayaan terlalu gelap</li>
+                                <li>Jangan menutupi wajah</li>
+                                <li>Hindari bayangan pada wajah</li>
+                                <li>Jangan terlalu jauh dari kamera</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            <strong>Keamanan:</strong>
+                            <small class="d-block mt-1">Data wajah Anda akan dienkripsi dan hanya digunakan untuk sistem login.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Enrollment -->
+                <div class="card card-custom shadow mt-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-user-check me-2"></i>Status Enrollment</h5>
+                    </div>
+                    <div class="card-body" id="enrollment-status">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-user-times fa-2x mb-2"></i>
+                            <p class="mb-0">Belum terdaftar</p>
+                            <small>Silakan lakukan enrollment</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Identity Card (Hidden initially) -->
+                <div class="card card-custom shadow mt-4" id="identity-card" style="display: none;">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-id-card me-2"></i>Identitas Tersimpan</h5>
+                    </div>
+                    <div class="card-body" id="identity-content">
+                        <!-- Will be populated after enrollment -->
+                    </div>
+                </div>
+
+                <!-- User Identity Card (Hidden initially) -->
+                <div class="card card-custom shadow mt-4" id="identity-card" style="display: none;">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-id-card me-2"></i>Identitas Tersimpan</h5>
+                    </div>
+                    <div class="card-body" id="identity-content">
+                        <!-- Will be populated after enrollment -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let stream;
+        let video;
+        let canvas;
+        let faceDetectionInterval;
+        
+        function startCamera() {
+            video = document.getElementById('video');
+            canvas = document.getElementById('canvas');
+            
+            // Update UI
+            document.getElementById('camera-off').style.display = 'none';
+            document.getElementById('camera-on').style.display = 'block';
+            document.getElementById('camera-controls').style.display = 'block';
+            
+            // Activate step 2
+            activateStep(2);
+            
+            // Request camera access
+            navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: 640, 
+                    height: 480,
+                    facingMode: 'user' 
+                } 
+            })
+            .then(function(mediaStream) {
+                stream = mediaStream;
+                video.srcObject = stream;
+                updateStatus('<i class="fas fa-video text-success"></i> Kamera aktif - Posisikan wajah Anda di tengah');
+                
+                // Start face detection feedback
+                startFaceDetection();
+            })
+            .catch(function(err) {
+                console.error('Error accessing camera:', err);
+                updateStatus('<i class="fas fa-exclamation-triangle text-danger"></i> Error: Tidak dapat mengakses kamera');
+            });
+        }
+        
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            if (faceDetectionInterval) {
+                clearInterval(faceDetectionInterval);
+            }
+            
+            document.getElementById('camera-off').style.display = 'block';
+            document.getElementById('camera-on').style.display = 'none';
+            document.getElementById('camera-controls').style.display = 'none';
+            
+            activateStep(1);
+            updateStatus('<i class="fas fa-info-circle text-muted"></i> Kamera dihentikan');
+        }
+        
+        function startFaceDetection() {
+            // Simple face detection feedback (you can enhance this)
+            faceDetectionInterval = setInterval(() => {
+                if (video.videoWidth && video.videoHeight) {
+                    updateQualityIndicator('ready');
+                }
+            }, 1000);
+        }
+        
+        function captureAndEnroll() {
+            if (!video.videoWidth || !video.videoHeight) {
+                updateStatus('<i class="fas fa-exclamation-triangle text-warning"></i> Menunggu kamera ready...');
+                return;
+            }
+            
+            // Activate step 3
+            activateStep(3);
+            
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw video frame to canvas
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            
+            // Convert to base64
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            updateStatus('<i class="fas fa-spinner fa-spin text-primary"></i> Memproses dan menyimpan data wajah...');
+            
+            // Send to server for enrollment
+            fetch('/api/face/enroll', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image_data: imageData
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateStatus(`<i class="fas fa-check-circle text-success"></i> ${data.message}`);
+                    updateEnrollmentStatus(true);
+                    
+                    // Show user identity
+                    showUserIdentity(data);
+                    
+                    // Show success and redirect
+                    setTimeout(() => {
+                        showSuccessAlert('Face enrollment berhasil! Anda sekarang dapat login menggunakan wajah.');
+                    }, 1000);
+                } else {
+                    updateStatus(`<i class="fas fa-times-circle text-danger"></i> ${data.message}`);
+                    activateStep(2); // Back to step 2
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                updateStatus('<i class="fas fa-exclamation-triangle text-danger"></i> Error saat menyimpan data wajah');
+                activateStep(2); // Back to step 2
+            });
+        }
+        
+        function retakePhoto() {
+            activateStep(2);
+            updateStatus('<i class="fas fa-camera text-info"></i> Siap untuk mengambil foto ulang');
+        }
+        
+        function updateStatus(html) {
+            document.getElementById('face-status').innerHTML = html;
+        }
+        
+        function updateQualityIndicator(status) {
+            const indicator = document.getElementById('quality-indicator');
+            switch(status) {
+                case 'ready':
+                    indicator.innerHTML = '<i class="fas fa-circle text-success"></i> Ready';
+                    break;
+                case 'detecting':
+                    indicator.innerHTML = '<i class="fas fa-circle text-warning"></i> Detecting...';
+                    break;
+                case 'good':
+                    indicator.innerHTML = '<i class="fas fa-circle text-success"></i> Good Quality';
+                    break;
+            }
+        }
+        
+        function activateStep(stepNumber) {
+            // Remove active class from all steps
+            document.querySelectorAll('.enrollment-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Add active class to current step
+            document.getElementById(`step${stepNumber}`).classList.add('active');
+        }
+        
+        function updateEnrollmentStatus(enrolled) {
+            const statusDiv = document.getElementById('enrollment-status');
+            if (enrolled) {
+                statusDiv.innerHTML = `
+                    <div class="text-center text-success">
+                        <i class="fas fa-user-check fa-2x mb-2"></i>
+                        <p class="mb-0 fw-bold">Terdaftar</p>
+                        <small>Face login tersedia</small>
+                    </div>
+                `;
+            }
+        }
+        
+        function showUserIdentity(data) {
+            // Show identity card with user info
+            const identityCard = document.getElementById('identity-card');
+            const identityContent = document.getElementById('identity-content');
+            
+            const identityHtml = `
+                <div class="text-center">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <i class="fas fa-user-circle fa-4x text-success mb-3"></i>
+                        </div>
+                        <div class="col-md-8 text-start">
+                            <h6 class="fw-bold text-success mb-2">
+                                <i class="fas fa-check-circle me-2"></i>Face Data Tersimpan!
+                            </h6>
+                            <div class="mb-2">
+                                <strong>Username:</strong> {{ session.username }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Full Name:</strong> {{ session.full_name or session.username }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Role:</strong> 
+                                <span class="badge bg-{{ 'success' if session.role == 'budidaya' else 'info' if session.role == 'tangkap' else 'primary' }}">
+                                    {{ session.role|title }}
+                                </span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Tanggal Daftar:</strong> ${new Date().toLocaleDateString('id-ID')}
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="alert alert-success mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Selamat!</strong> Wajah Anda sudah terdaftar. Sekarang Anda dapat login menggunakan face recognition di halaman login.
+                    </div>
+                </div>
+            `;
+            
+            identityContent.innerHTML = identityHtml;
+            identityCard.style.display = 'block';
+            
+            // Scroll to identity card
+            setTimeout(() => {
+                identityCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 500);
+        }
+        
+        function showSuccessAlert(message) {
+            const alertHtml = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            // Insert after flash messages area
+            const container = document.querySelector('.container .row:nth-child(2)');
+            container.insertAdjacentHTML('afterend', alertHtml);
+        }
+        
+        // Check enrollment status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // You can add API call here to check if user is already enrolled
+        });
+    </script>
+</body>
+</html>

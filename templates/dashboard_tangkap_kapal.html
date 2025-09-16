@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Tangkap - Fisheries System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #20b2aa 0%, #006d75 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .stat-card {
+            border-left: 4px solid;
+        }
+        .stat-card.teal {
+            border-color: #20b2aa;
+        }
+        .stat-card.blue {
+            border-color: #0080b7;
+        }
+        .stat-card.cyan {
+            border-color: #17a2b8;
+        }
+        .stat-card.dark-teal {
+            border-color: #006d75;
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #20b2aa 0%, #006d75 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('welcome') }}">
+                <i class="fas fa-fish me-2 text-primary"></i>
+                Fisheries System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    {{ session.username }} (Tangkap)
+                </span>
+                <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow-lg mb-4">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-anchor fa-3x text-info mb-3"></i>
+                        <h2 class="fw-bold mb-2">Dashboard Penangkap Ikan</h2>
+                        <p class="text-muted mb-0">Manajemen Kapal & Operasional Penangkapan Ikan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card teal">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-ship fa-2x" style="color: #20b2aa;"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.total_kapal }}</h4>
+                                <p class="text-muted mb-0">Total Kapal</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card blue">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-water fa-2x" style="color: #0080b7;"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.kapal_melaut }}</h4>
+                                <p class="text-muted mb-0">Sedang Melaut</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card cyan">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-fish fa-2x text-info"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.total_tangkapan }}</h4>
+                                <p class="text-muted mb-0">Total Tangkapan (ton)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card dark-teal">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-chart-line fa-2x" style="color: #006d75;"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.trip_bulan_ini }}</h4>
+                                <p class="text-muted mb-0">Trip Bulan Ini</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card card-custom shadow">
+                    <div class="card-body text-center py-4">
+                        <h5 class="fw-bold mb-4">Aksi Cepat</h5>
+                        <div class="d-flex flex-wrap justify-content-center gap-3">
+                            <a href="{{ url_for('register_kapal') }}" class="btn btn-custom btn-lg">
+                                <i class="fas fa-plus me-2"></i>
+                                Registrasi Kapal Baru
+                            </a>
+                            <a href="{{ url_for('add_trip') }}" class="btn btn-info btn-lg">
+                                <i class="fas fa-route me-2"></i>
+                                Catat Trip Penangkapan
+                            </a>
+                            <a href="{{ url_for('list_kapal') }}" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-list me-2"></i>
+                                Lihat Daftar Kapal
+                            </a>
+                            <a href="#" class="btn btn-outline-warning btn-lg" onclick="showTangkapAnalytics()">
+                                <i class="fas fa-chart-area me-2"></i>
+                                Analisis Penangkapan
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Section -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card card-custom shadow">
+                    <div class="card-header text-white" style="background: linear-gradient(135deg, #20b2aa 0%, #006d75 100%);">
+                        <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Analisis Penangkapan</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-ship fa-2x text-info mb-2"></i>
+                                    <h4 class="fw-bold text-info">{{ stats.analytics.kapal_tangkap }}</h4>
+                                    <p class="text-muted mb-0">Kapal Tangkap</p>
+                                    <small class="text-muted">Aktif beroperasi</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-weight-hanging fa-2x" style="color: #20b2aa;" mb-2></i>
+                                    <h4 class="fw-bold" style="color: #20b2aa;">{{ "%.1f"|format(stats.analytics.total_gt) }}</h4>
+                                    <p class="text-muted mb-0">Total GT</p>
+                                    <small class="text-muted">Gross Tonnage</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-calculator fa-2x" style="color: #006d75;" mb-2></i>
+                                    <h4 class="fw-bold" style="color: #006d75;">{{ "%.1f"|format(stats.analytics.rata_rata_gt) }}</h4>
+                                    <p class="text-muted mb-0">Rata-rata Hasil</p>
+                                    <small class="text-muted">Ton per trip</small>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h6 class="fw-bold mb-3">Area Penangkapan Populer</h6>
+                        <div class="row">
+                            {% for pelabuhan in stats.analytics.pelabuhan_stats[:3] %}
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-map-marker-alt" style="color: #20b2aa;" me-2></i>
+                                    <div>
+                                        <p class="mb-0 fw-semibold">{{ pelabuhan.pelabuhan or 'Area tidak diset' }}</p>
+                                        <small class="text-muted">{{ pelabuhan.jumlah }} kapal</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card card-custom shadow">
+                    <div class="card-header text-white" style="background-color: #20b2aa;">
+                        <h5 class="mb-0"><i class="fas fa-thermometer-half me-2"></i>Kondisi Laut</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <i class="fas fa-waves fa-4x text-info mb-3"></i>
+                        <h3 class="fw-bold" style="color: #20b2aa;">{{ stats.kondisi_laut or 'Tenang' }}</h3>
+                        <p class="text-muted">Kondisi laut saat ini</p>
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tinggi Gelombang:</span>
+                                <span class="fw-bold" style="color: #20b2aa;">1.5m</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Kecepatan Angin:</span>
+                                <span class="fw-bold" style="color: #20b2aa;">15 knot</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Visibilitas:</span>
+                                <span class="fw-bold" style="color: #20b2aa;">8 mil</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daftar Kapal Tangkap -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow">
+                    <div class="card-header text-white" style="background: linear-gradient(135deg, #0080b7 0%, #20b2aa 100%);">
+                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Kapal Penangkap Ikan Terdaftar</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if kapal_list %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>No. Registrasi</th>
+                                        <th>Nama Kapal</th>
+                                        <th>Nahkoda</th>
+                                        <th>GT</th>
+                                        <th>Status Operasi</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for kapal in kapal_list %}
+                                    <tr>
+                                        <td><span class="badge" style="background-color: #20b2aa;">{{ kapal.nomor_registrasi }}</span></td>
+                                        <td class="fw-bold">{{ kapal.nama_kapal }}</td>
+                                        <td>{{ kapal.nama_nahkoda or kapal.nama_pemilik }}</td>
+                                        <td>{{ kapal.ukuran_gt or '-' }} GT</td>
+                                        <td>
+                                            {% if kapal.status_operasi == 'melaut' %}
+                                            <span class="badge bg-info">Melaut</span>
+                                            {% elif kapal.status_operasi == 'berlabuh' %}
+                                            <span class="badge bg-success">Berlabuh</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ kapal.status_operasi|title if kapal.status_operasi else 'Tidak aktif' }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('detail_kapal', kapal_id=kapal.id) }}" class="btn btn-sm btn-outline-info">
+                                                <i class="fas fa-eye me-1"></i>Detail
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-ship fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">Belum ada kapal terdaftar</h5>
+                            <p class="text-muted">Mulai dengan mendaftarkan kapal penangkap Anda</p>
+                            <a href="{{ url_for('register_kapal') }}" class="btn btn-custom">
+                                <i class="fas fa-plus me-2"></i>Daftar Kapal Pertama
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showTangkapAnalytics() {
+            fetch('/api/tangkap/analytics')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const t = data.tangkap;
+                        alert('=== ANALISIS PENANGKAPAN ===\n\n' +
+                              `🚢 KAPAL & TRIP:\n` +
+                              `• Total Kapal: ${t.total_kapal}\n` +
+                              `• Kapal Aktif: ${t.kapal_aktif}\n` +
+                              `• Total Trip: ${t.total_trip}\n` +
+                              `• Trip Berlangsung: ${t.trip_aktif}\n\n` +
+                              
+                              `🐟 HASIL TANGKAPAN:\n` +
+                              `• Total Tangkapan: ${t.total_tangkapan} ton\n` +
+                              `• Nilai Total: Rp ${t.total_nilai} juta\n` +
+                              `• Rata-rata per Trip: ${t.rata_per_trip} ton\n\n` +
+                              
+                              `⛽ EFISIENSI BBM:\n` +
+                              `• Total BBM: ${t.total_bbm} liter\n` +
+                              `• Efisiensi: ${t.efisiensi_bbm} kg/liter\n\n` +
+                              
+                              `🎯 TARGET BULAN INI:\n` +
+                              `• Target Trip: ${t.target_bulan_ini.trip}\n` +
+                              `• Target Tangkapan: ${t.target_bulan_ini.tangkapan} ton\n` +
+                              `• Target Pendapatan: Rp ${t.target_bulan_ini.pendapatan} juta\n\n` +
+                              
+                              `🐠 IKAN POPULER:\n` +
+                              t.ikan_populer.map(i => `• ${i.jenis}: ${i.berat} ton`).join('\n'));
+                    } else {
+                        alert('Gagal memuat analisis penangkapan');
+                    }
+                })
+                .catch(error => {
+                    alert('Error mengambil data analisis penangkapan');
+                });
+        }
+    </script>
+</body>
+</html>

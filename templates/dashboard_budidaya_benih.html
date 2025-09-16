@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Budidaya - Fisheries System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .stat-card {
+            border-left: 4px solid;
+        }
+        .stat-card.success {
+            border-color: #28a745;
+        }
+        .stat-card.info {
+            border-color: #17a2b8;
+        }
+        .stat-card.warning {
+            border-color: #ffc107;
+        }
+        .stat-card.danger {
+            border-color: #dc3545;
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('welcome') }}">
+                <i class="fas fa-fish me-2 text-primary"></i>
+                Fisheries System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    {{ session.username }} (Budidaya)
+                </span>
+                <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow-lg mb-4">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-seedling fa-3x text-success mb-3"></i>
+                        <h2 class="fw-bold mb-2">Dashboard Budidaya</h2>
+                        <p class="text-muted mb-0">Distribusi Benih Ikan DO (Dropped Out) - Nila, Lele, Mas, Gurame</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- 4 Data Penting -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card info">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-file-alt fa-2x text-info"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.total_permintaan }}</h4>
+                                <p class="text-muted mb-0">Total Permintaan</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card success">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.permintaan_disetujui }}</h4>
+                                <p class="text-muted mb-0">Disetujui</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card warning">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-clock fa-2x text-warning"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.permintaan_pending }}</h4>
+                                <p class="text-muted mb-0">Pending</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card card-custom shadow stat-card danger">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-times-circle fa-2x text-danger"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h4 class="fw-bold mb-0">{{ stats.permintaan_ditolak }}</h4>
+                                <p class="text-muted mb-0">Ditolak</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card card-custom shadow">
+                    <div class="card-body text-center py-4">
+                        <h5 class="fw-bold mb-4">Aksi Cepat</h5>
+                        <div class="d-flex flex-wrap justify-content-center gap-3">
+                            <a href="{{ url_for('add_permintaan_benih') }}" class="btn btn-custom btn-lg">
+                                <i class="fas fa-plus me-2"></i>
+                                Permintaan Benih Baru
+                            </a>
+                            <a href="#" class="btn btn-outline-success btn-lg" onclick="showStokBenih()">
+                                <i class="fas fa-warehouse me-2"></i>
+                                Cek Stok Benih
+                            </a>
+                            <a href="#" class="btn btn-outline-info btn-lg" onclick="showBudidayaAnalytics()">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Analisis Distribusi
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Benih -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Analisis Distribusi Benih</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-fish fa-2x text-success mb-2"></i>
+                                    <h4 class="fw-bold text-success">{{ stats.budidaya.total_stok }}</h4>
+                                    <p class="text-muted mb-0">Total Stok Benih</p>
+                                    <small class="text-muted">ekor tersedia</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-truck fa-2x text-info mb-2"></i>
+                                    <h4 class="fw-bold text-info">{{ stats.budidaya.total_benih_distribusi }}</h4>
+                                    <p class="text-muted mb-0">Benih Terdistribusi</p>
+                                    <small class="text-muted">ekor bulan ini</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-money-bill-wave fa-2x text-warning mb-2"></i>
+                                    <h4 class="fw-bold text-warning">{{ "%.1f"|format(stats.budidaya.total_nilai_distribusi) }}</h4>
+                                    <p class="text-muted mb-0">Nilai Distribusi</p>
+                                    <small class="text-muted">juta rupiah</small>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h6 class="fw-bold mb-3">Jenis Ikan Populer</h6>
+                        <div class="row">
+                            {% for ikan in stats.budidaya.jenis_ikan_stats[:4] %}
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-fish text-success me-2"></i>
+                                    <div>
+                                        <p class="mb-0 fw-semibold">{{ ikan.jenis }}</p>
+                                        <small class="text-muted">{{ ikan.total_diminta }} ekor</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-percentage me-2"></i>Performance Metrics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small">Approval Rate</span>
+                                <span class="small">{{ stats.budidaya.approval_rate }}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" style="width: {{ stats.budidaya.approval_rate }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small">Jenis Tersedia:</span>
+                            <span class="fw-bold text-success">{{ stats.budidaya.jenis_ikan_tersedia }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small">Rata-rata Luas Kolam:</span>
+                            <span class="fw-bold text-info">{{ stats.budidaya.avg_luas_kolam }} m²</span>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6 class="fw-bold mb-3">Target Bulan Ini</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small">Permintaan Baru:</span>
+                            <span class="fw-bold text-primary">{{ stats.budidaya.target_bulan_ini.permintaan_baru }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small">Target Distribusi:</span>
+                            <span class="fw-bold text-success">{{ "{:,}".format(stats.budidaya.target_bulan_ini.distribusi_target) }} ekor</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="small">Target Revenue:</span>
+                            <span class="fw-bold text-warning">Rp {{ stats.budidaya.target_bulan_ini.revenue_target }} juta</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histori Permintaan Benih -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Histori Permintaan Benih</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_permintaan %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>No. Permintaan</th>
+                                        <th>Nama Pemohon</th>
+                                        <th>Jenis Ikan</th>
+                                        <th>Jumlah</th>
+                                        <th>Tanggal</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for permintaan in recent_permintaan %}
+                                    <tr>
+                                        <td><span class="badge bg-primary">{{ permintaan.nomor_permintaan }}</span></td>
+                                        <td class="fw-bold">{{ permintaan.nama_pemohon }}</td>
+                                        <td>{{ permintaan.jenis_ikan }} ({{ permintaan.ukuran_benih }})</td>
+                                        <td>{{ "{:,}".format(permintaan.jumlah_diminta) }} ekor</td>
+                                        <td>{{ permintaan.tanggal_permintaan.strftime('%d/%m/%Y') if permintaan.tanggal_permintaan else '-' }}</td>
+                                        <td>
+                                            {% if permintaan.status_permintaan == 'disetujui' %}
+                                            <span class="badge bg-success">Disetujui</span>
+                                            {% elif permintaan.status_permintaan == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                            {% elif permintaan.status_permintaan == 'ditolak' %}
+                                            <span class="badge bg-danger">Ditolak</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ permintaan.status_permintaan|title }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="showDetailPermintaan({{ permintaan.id }})">
+                                                <i class="fas fa-eye me-1"></i>Detail
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-seedling fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">Belum ada permintaan benih</h5>
+                            <p class="text-muted">Mulai dengan mengajukan permintaan benih ikan DO</p>
+                            <a href="{{ url_for('add_permintaan_benih') }}" class="btn btn-custom">
+                                <i class="fas fa-plus me-2"></i>Ajukan Permintaan Pertama
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showBudidayaAnalytics() {
+            fetch('/api/budidaya/analytics')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const b = data.budidaya;
+                        alert('=== ANALISIS DISTRIBUSI BENIH ===\n\n' +
+                              `📊 OVERVIEW PERMINTAAN:\n` +
+                              `• Total Permintaan: ${b.total_permintaan}\n` +
+                              `• Disetujui: ${b.permintaan_disetujui}\n` +
+                              `• Pending: ${b.permintaan_pending}\n` +
+                              `• Ditolak: ${b.permintaan_ditolak}\n\n` +
+                              
+                              `🐟 STOK & DISTRIBUSI:\n` +
+                              `• Total Stok: ${b.total_stok.toLocaleString()} ekor\n` +
+                              `• Jenis Tersedia: ${b.jenis_ikan_tersedia} jenis\n` +
+                              `• Benih Terdistribusi: ${b.total_benih_distribusi.toLocaleString()} ekor\n` +
+                              `• Nilai Distribusi: Rp ${b.total_nilai_distribusi} juta\n\n` +
+                              
+                              `📈 PERFORMANCE:\n` +
+                              `• Approval Rate: ${b.approval_rate}%\n` +
+                              `• Rata-rata Luas Kolam: ${b.avg_luas_kolam} m²\n\n` +
+                              
+                              `🎯 TARGET BULAN INI:\n` +
+                              `• Permintaan Baru: ${b.target_bulan_ini.permintaan_baru}\n` +
+                              `• Target Distribusi: ${b.target_bulan_ini.distribusi_target.toLocaleString()} ekor\n` +
+                              `• Target Revenue: Rp ${b.target_bulan_ini.revenue_target} juta\n\n` +
+                              
+                              `🐠 IKAN POPULER:\n` +
+                              b.jenis_ikan_stats.map(i => `• ${i.jenis}: ${i.total_diminta.toLocaleString()} ekor`).join('\n'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error mengambil data analisis budidaya');
+                });
+        }
+
+        function showStokBenih() {
+            alert('📦 STOK BENIH TERSEDIA\n\n' +
+                  `Total Stok: {{ stats.budidaya.total_stok }} ekor\n` +
+                  `Jenis Tersedia: {{ stats.budidaya.jenis_ikan_tersedia }} jenis\n\n` +
+                  `[Info stok detail akan ditampilkan di sini]\n\n` +
+                  `Untuk melihat detail stok per jenis ikan`);
+        }
+
+        function showDetailPermintaan(id) {
+            alert(`Detail permintaan ID: ${id}\n\n` +
+                  `Akan menampilkan:\n` +
+                  `- Data lengkap pemohon\n` +
+                  `- Detail benih yang diminta\n` +
+                  `- Status approval\n` +
+                  `- Timeline proses\n` +
+                  `- Data kolam budidaya`);
+        }
+    </script>
+</body>
+</html>

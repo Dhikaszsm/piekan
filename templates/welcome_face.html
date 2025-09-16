@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Fisheries System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        .login-method-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-fish me-2 text-primary"></i>
+                Fisheries System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    Welcome, {{ session.full_name or session.username }} ({{ session.role|title }})
+                </span>
+                {% if session.login_method == 'face_recognition' %}
+                <span class="badge bg-success me-3">
+                    <i class="fas fa-user-circle me-1"></i>Face Login
+                </span>
+                {% endif %}
+                <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Welcome Card -->
+                <div class="card card-custom shadow-lg mb-4 position-relative">
+                    {% if session.login_method == 'face_recognition' %}
+                    <div class="login-method-badge">
+                        <span class="badge bg-success fs-6">
+                            <i class="fas fa-camera me-1"></i>Face Recognition Login
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-fish fa-4x text-primary mb-4"></i>
+                        <h2 class="fw-bold mb-3">Selamat Datang di Fisheries System</h2>
+                        <p class="lead text-muted mb-4">Sistem Informasi Manajemen Perikanan Indonesia dengan Face Recognition</p>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card border-0 bg-light h-100 feature-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-seedling fa-2x text-success mb-3"></i>
+                                        <h5>Budidaya</h5>
+                                        <p class="text-muted small">Manajemen tambak, kolam, dan produksi perikanan budidaya</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-0 bg-light h-100 feature-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-fish fa-2x text-info mb-3"></i>
+                                        <h5>Tangkap</h5>
+                                        <p class="text-muted small">Pengelolaan kapal, alat tangkap, dan hasil tangkapan</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-0 bg-light h-100 feature-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-certificate fa-2x text-primary mb-3"></i>
+                                        <h5>Sertifikasi</h5>
+                                        <p class="text-muted small">PDSPKP - Sertifikasi dan standarisasi produk perikanan</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Main Action Cards - Equal Heights -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card card-custom shadow-lg feature-card h-100">
+                            <div class="card-body text-center d-flex flex-column py-4">
+                                <i class="fas fa-tachometer-alt fa-4x text-primary mb-3"></i>
+                                <h4 class="fw-bold mb-3">Dashboard {{ session.role|title }}</h4>
+                                <p class="text-muted mb-4 flex-grow-1">Akses dashboard khusus untuk role Anda dengan fitur lengkap dan analytics</p>
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-custom btn-lg px-4 mt-auto">
+                                    <i class="fas fa-arrow-right me-2"></i>
+                                    Masuk ke Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-custom shadow-lg feature-card h-100">
+                            <div class="card-body text-center d-flex flex-column py-4">
+                                <i class="fas fa-user-circle fa-4x text-success mb-3"></i>
+                                <h4 class="fw-bold mb-3">Face Enrollment</h4>
+                                <p class="text-muted mb-4 flex-grow-1">Daftarkan wajah Anda untuk login menggunakan face recognition</p>
+                                <a href="{{ url_for('face_enrollment_page') }}" class="btn btn-success btn-lg px-4 mt-auto">
+                                    <i class="fas fa-camera me-2"></i>
+                                    Face Enrollment
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-custom shadow-lg feature-card h-100">
+                            <div class="card-body text-center d-flex flex-column py-4">
+                                <i class="fas fa-chart-pulse fa-4x text-info mb-3"></i>
+                                <h4 class="fw-bold mb-3">Status System</h4>
+                                <p class="text-muted mb-4 flex-grow-1">Monitor status dan kesehatan sistem secara real-time</p>
+                                <button class="btn btn-info btn-lg px-4 mt-auto" onclick="showSystemStatus()">
+                                    <i class="fas fa-desktop me-2"></i>
+                                    Cek Status
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Status -->
+                <div class="card card-custom shadow-lg">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-info-circle me-2"></i>Status Sistem
+                        </h6>
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                <p class="mb-0 small">Web Server</p>
+                                <span class="badge bg-success">Online</span>
+                            </div>
+                            <div class="col-md-3">
+                                <i class="fas fa-database fa-2x text-info mb-2"></i>
+                                <p class="mb-0 small">Database</p>
+                                <span class="badge bg-info">Connected</span>
+                            </div>
+                            <div class="col-md-3">
+                                <i class="fas fa-user-shield fa-2x text-primary mb-2"></i>
+                                <p class="mb-0 small">Face Recognition</p>
+                                <span class="badge bg-primary">Active</span>
+                            </div>
+                            <div class="col-md-3">
+                                <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                                <p class="mb-0 small">Security</p>
+                                <span class="badge bg-success">Secure</span>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        <div class="text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Login method: 
+                                {% if session.login_method == 'face_recognition' %}
+                                <strong class="text-success">Face Recognition</strong>
+                                {% else %}
+                                <strong class="text-primary">Password</strong>
+                                {% endif %}
+                                | Session: {{ session.username }} | Role: {{ session.role|title }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showSystemStatus() {
+            // Fetch system status
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'OK') {
+                        alert(`=== STATUS SISTEM ===\n\n` +
+                              `✅ Web Server: ${data.status}\n` +
+                              `✅ Session: ${data.session_active ? 'Active' : 'Inactive'}\n` +
+                              `✅ Face System: ${data.face_system_ready ? 'Ready' : 'Not Ready'}\n` +
+                              `✅ Database: Connected\n\n` +
+                              
+                              `📊 DATA OVERVIEW:\n` +
+                              `• Total Kapal: ${data.kapal_count}\n` +
+                              `• Enrolled Faces: ${data.enrolled_faces}\n\n` +
+                              
+                              `👤 USER INFO:\n` +
+                              `• Username: {{ session.username }}\n` +
+                              `• Full Name: {{ session.full_name or session.username }}\n` +
+                              `• Role: {{ session.role|title }}\n` +
+                              `• Login Method: {{ session.login_method|default('password') }}\n\n` +
+                              
+                              `🕐 Session Time: ${new Date().toLocaleString('id-ID')}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error mengambil status sistem');
+                });
+        }
+
+        // Show welcome message for face recognition login
+        {% if session.login_method == 'face_recognition' %}
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add subtle animation for face login badge
+            const badge = document.querySelector('.login-method-badge .badge');
+            if (badge) {
+                setTimeout(() => {
+                    badge.style.animation = 'pulse 2s infinite';
+                }, 1000);
+            }
+        });
+        {% endif %}
+    </script>
+    
+    <style>
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</body>
+</html>
