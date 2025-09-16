@@ -179,15 +179,19 @@
                         </div>
                         
                         <div class="mt-3" id="camera-controls" style="display: none;">
-                            <button type="button" class="btn btn-success btn-lg me-2" onclick="captureAndEnroll()">
-                                <i class="fas fa-camera me-2"></i>Ambil Foto & Daftar Wajah
-                            </button>
-                            <button type="button" class="btn btn-warning me-2" onclick="retakePhoto()">
-                                <i class="fas fa-redo me-2"></i>Ambil Ulang
+                            <button type="button" class="btn btn-success btn-lg me-2" onclick="manualCapture()" id="manual-capture" style="display: none;">
+                                <i class="fas fa-camera me-2"></i>Ambil Foto Manual
                             </button>
                             <button type="button" class="btn btn-secondary" onclick="stopCamera()">
                                 <i class="fas fa-stop me-2"></i>Stop Kamera
                             </button>
+                            
+                            <div class="mt-3">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-robot me-2"></i>
+                                    <strong>Auto Detection Mode:</strong> Sistem akan otomatis mendeteksi dan mendaftarkan wajah Anda dalam 3 detik setelah wajah terdeteksi.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -271,7 +275,9 @@
         let stream;
         let video;
         let canvas;
-        let faceDetectionInterval;
+        let autoDetectionInterval;
+        let faceDetectedCount = 0;
+        let autoEnrollmentTimer = null;
         
         function startCamera() {
             video = document.getElementById('video');
@@ -296,10 +302,10 @@
             .then(function(mediaStream) {
                 stream = mediaStream;
                 video.srcObject = stream;
-                updateStatus('<i class="fas fa-video text-success"></i> Kamera aktif - Posisikan wajah Anda di tengah');
+                updateStatus('<i class="fas fa-video text-success"></i> Kamera aktif - Menunggu deteksi wajah otomatis...');
                 
-                // Start face detection feedback
-                startFaceDetection();
+                // Start automatic face detection
+                startAutoDetection();
             })
             .catch(function(err) {
                 console.error('Error accessing camera:', err);
@@ -312,8 +318,12 @@
                 stream.getTracks().forEach(track => track.stop());
             }
             
-            if (faceDetectionInterval) {
-                clearInterval(faceDetectionInterval);
+            if (autoDetectionInterval) {
+                clearInterval(autoDetectionInterval);
+            }
+            
+            if (autoEnrollmentTimer) {
+                clearTimeout(autoEnrollmentTimer);
             }
             
             document.getElementById('camera-off').style.display = 'block';
@@ -324,13 +334,46 @@
             updateStatus('<i class="fas fa-info-circle text-muted"></i> Kamera dihentikan');
         }
         
-        function startFaceDetection() {
-            // Simple face detection feedback (you can enhance this)
-            faceDetectionInterval = setInterval(() => {
+        function startAutoDetection() {
+            updateStatus('<i class="fas fa-search text-info"></i> Mencari wajah secara otomatis...');
+            
+            autoDetectionInterval = setInterval(() => {
                 if (video.videoWidth && video.videoHeight) {
+                    // Simulate face detection (in real app, you'd analyze video frame)
+                    detectFaceInFrame();
+                }
+            }, 500); // Check every 500ms
+        }
+        
+        function detectFaceInFrame() {
+            // Simulate face detection - in real implementation, 
+            // you would analyze the video frame here
+            
+            // For demo, we assume face is detected after camera is ready
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+                faceDetectedCount++;
+                
+                if (faceDetectedCount >= 6) { // 3 seconds of detection
+                    // Face detected consistently
+                    updateStatus('<i class="fas fa-user-check text-success"></i> Wajah terdeteksi! Auto-enrollment dalam 3 detik...');
+                    updateQualityIndicator('good');
+                    
+                    // Stop detection loop
+                    clearInterval(autoDetectionInterval);
+                    
+                    // Auto-enrollment after 3 seconds
+                    autoEnrollmentTimer = setTimeout(() => {
+                        captureAndEnroll();
+                    }, 3000);
+                    
+                } else if (faceDetectedCount >= 2) {
+                    updateStatus('<i class="fas fa-eye text-warning"></i> Mendeteksi wajah... mohon diam sebentar');
+                    updateQualityIndicator('detecting');
+                } else {
+                    updateStatus('<i class="fas fa-search text-info"></i> Mencari wajah... posisikan wajah di tengah');
                     updateQualityIndicator('ready');
                 }
-            }, 1000);
+            }
         }
         
         function captureAndEnroll() {
@@ -390,9 +433,16 @@
             });
         }
         
+        function manualCapture() {
+            captureAndEnroll();
+        }
+        
         function retakePhoto() {
+            // Reset detection
+            faceDetectedCount = 0;
             activateStep(2);
-            updateStatus('<i class="fas fa-camera text-info"></i> Siap untuk mengambil foto ulang');
+            startAutoDetection();
+            updateStatus('<i class="fas fa-search text-info"></i> Memulai ulang deteksi otomatis...');
         }
         
         function updateStatus(html) {

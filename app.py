@@ -143,20 +143,26 @@ def dashboard():
 @app.route('/dashboard/budidaya')
 @require_role('budidaya')
 def dashboard_budidaya():
-    budidaya_analytics = get_budidaya_analytics(session['username'])
-    recent_permintaan = PermintaanBenih.query.filter_by(
-        created_by=session['username']
-    ).order_by(PermintaanBenih.created_at.desc()).limit(10).all()
-    
-    stats = {
-        'total_permintaan': budidaya_analytics['total_permintaan'],
-        'permintaan_disetujui': budidaya_analytics['permintaan_disetujui'],
-        'permintaan_pending': budidaya_analytics['permintaan_pending'],
-        'permintaan_ditolak': budidaya_analytics['permintaan_ditolak'],
-        'budidaya': budidaya_analytics
-    }
-    
-    return render_template('dashboard_budidaya_benih.html', stats=stats, recent_permintaan=recent_permintaan)
+    try:
+        budidaya_analytics = get_budidaya_analytics(session['username'])
+        recent_permintaan = PermintaanBenih.query.filter_by(
+            created_by=session['username']
+        ).order_by(PermintaanBenih.created_at.desc()).limit(10).all()
+        
+        stats = {
+            'total_permintaan': budidaya_analytics['total_permintaan'],
+            'permintaan_disetujui': budidaya_analytics['permintaan_disetujui'],
+            'permintaan_pending': budidaya_analytics['permintaan_pending'],
+            'permintaan_ditolak': budidaya_analytics['permintaan_ditolak'],
+            'budidaya': budidaya_analytics
+        }
+        
+        return render_template('dashboard_budidaya_benih.html', stats=stats, recent_permintaan=recent_permintaan)
+        
+    except Exception as e:
+        print(f"[ERROR] Budidaya dashboard: {e}")
+        flash(f'Error loading dashboard: {str(e)}')
+        return redirect(url_for('welcome'))
 
 @app.route('/dashboard/tangkap')
 @require_role('tangkap')
@@ -178,35 +184,68 @@ def dashboard_tangkap():
 @app.route('/dashboard/pdspkp')
 @require_role('pdspkp')
 def dashboard_pdspkp():
-    pdspkp_analytics = get_pdspkp_analytics()
-    recent_permohonan = PermohonanSertifikasiProduk.query.order_by(
-        PermohonanSertifikasiProduk.created_at.desc()
-    ).limit(10).all()
-    
-    stats = {
-        'total_permintaan': pdspkp_analytics['total_permintaan'],
-        'sertifikasi_diterbitkan': pdspkp_analytics['sertifikasi_diterbitkan'],
-        'dalam_proses': pdspkp_analytics['dalam_proses'],
-        'ditolak': pdspkp_analytics['ditolak'],
-        'pdspkp': pdspkp_analytics
-    }
-    
-    return render_template('dashboard_pdspkp_mutu.html', stats=stats, recent_permohonan=recent_permohonan)
+    try:
+        pdspkp_analytics = get_pdspkp_analytics()
+        recent_permohonan = PermohonanSertifikasiProduk.query.order_by(
+            PermohonanSertifikasiProduk.created_at.desc()
+        ).limit(10).all()
+        
+        stats = {
+            'total_permintaan': pdspkp_analytics['total_permintaan'],
+            'sertifikasi_diterbitkan': pdspkp_analytics['sertifikasi_diterbitkan'],
+            'dalam_proses': pdspkp_analytics['dalam_proses'],
+            'ditolak': pdspkp_analytics['ditolak'],
+            'pdspkp': pdspkp_analytics
+        }
+        
+        return render_template('dashboard_pdspkp_mutu.html', stats=stats, recent_permohonan=recent_permohonan)
+        
+    except Exception as e:
+        print(f"[ERROR] PDSPKP dashboard: {e}")
+        flash(f'Error loading dashboard: {str(e)}')
+        return redirect(url_for('welcome'))
 
 @app.route('/dashboard/admin')
 @require_role('admin')
 def dashboard_admin():
-    analytics = get_kapal_analytics()
+    try:
+        analytics = get_kapal_analytics()
+        enrolled_users = face_system.get_enrolled_users()
+        
+        stats = {
+            'total_users': len(DEMO_USERS),
+            'enrolled_faces': len(enrolled_users),
+            'total_kapal': analytics['total_kapal'],
+            'analytics': analytics
+        }
+        
+        return render_template('dashboard_admin.html', stats=stats, enrolled_users=enrolled_users)
+        
+    except Exception as e:
+        print(f"[ERROR] Admin dashboard: {e}")
+        flash(f'Error loading admin dashboard: {str(e)}')
+        return redirect(url_for('welcome'))
+
+# Admin Face Management Routes
+@app.route('/api/face/users')
+@require_role('admin')
+def api_face_users():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
     enrolled_users = face_system.get_enrolled_users()
-    
-    stats = {
-        'total_users': len(DEMO_USERS),
-        'enrolled_faces': len(enrolled_users),
-        'total_kapal': analytics['total_kapal'],
-        'analytics': analytics
-    }
-    
-    return render_template('dashboard_admin.html', stats=stats, enrolled_users=enrolled_users)
+    return jsonify({
+        'success': True,
+        'users': enrolled_users,
+        'count': len(enrolled_users)
+    })
+
+@app.route('/api/face/delete/<username>', methods=['DELETE'])
+@require_role('admin')
+def api_delete_face_user(username):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    result = face_system.delete_user(username)
+    return jsonify(result)
 
 # Face Recognition Routes
 @app.route('/face/enrollment')

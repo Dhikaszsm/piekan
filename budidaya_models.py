@@ -191,13 +191,17 @@ def init_budidaya_database(app):
     Initialize budidaya database untuk benih ikan
     """
     with app.app_context():
-        # Drop and recreate tables untuk fresh start
-        db.drop_all()
-        db.create_all()
-        print("[OK] Budidaya benih database tables created!")
-        
-        # Create sample data
-        create_sample_budidaya_benih_data()
+        try:
+            # Create tables (don't drop in production)
+            db.create_all()
+            print("[OK] Budidaya benih database tables created!")
+            
+            # Create sample data only if empty
+            if PermintaanBenih.query.count() == 0:
+                create_sample_budidaya_benih_data()
+        except Exception as e:
+            print(f"[ERROR] Budidaya database init: {e}")
+            # Continue anyway - tables might already exist
 
 def create_sample_budidaya_benih_data():
     """
